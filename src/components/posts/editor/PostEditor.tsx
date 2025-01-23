@@ -43,7 +43,7 @@ export default function PostEditor() {
         italic: false,
       }),
       Placeholder.configure({
-        placeholder: "What's crack-a-lackin'?",
+        placeholder: "Share a meal or just your thoughts...",
       }),
     ],
   });
