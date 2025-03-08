@@ -60,6 +60,7 @@ model Follow {
 model Post {
   id                  String         @id @default(cuid())
   content             String
+  calories            Int
   userId              String
   user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   attachments         Media[]
