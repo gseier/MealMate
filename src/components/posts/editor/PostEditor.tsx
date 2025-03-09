@@ -73,7 +73,7 @@ export default function PostEditor() {
     mutation.mutate(
       {
         content: input,
-        calories: parseFloat(calorieinput) || 0,
+        calories: parseInt(calorieinput) || 1,
         mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
       },
       {
