@@ -15,6 +15,8 @@ import UserTooltip from "../UserTooltip";
 import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
+import { CaloriesChart } from "./CaloriesChart"; // Adjust path if needed
+
 
 interface PostProps {
   post: PostData;
@@ -61,7 +63,7 @@ export default function Post({ post }: PostProps) {
       </div>
       <Linkify>
         <div className="whitespace-pre-line break-words">{post.content}</div>
-        <div className="whitespace-pre-line break-words">{post.calories}</div>
+        <CaloriesChart calories={post.calories} />
       </Linkify>
       {!!post.attachments.length && (
         <MediaPreviews attachments={post.attachments} />
