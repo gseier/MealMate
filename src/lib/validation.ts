@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const requiredString = z.string().trim().min(1, "Required");
+const requiredInteger = z.number().int().min(1, "Required");
 
 export const signUpSchema = z.object({
   email: requiredString.email("Invalid email address"),
@@ -22,7 +23,7 @@ export type LoginValues = z.infer<typeof loginSchema>;
 
 export const createPostSchema = z.object({
   content: requiredString,
-  calories: z.string().regex(/^\d+$/, "Must be a number"),
+  calories: requiredInteger,
   mediaIds: z.array(z.string()).max(5, "Cannot have more than 5 attachments"),
 });
 

@@ -7,7 +7,7 @@ import { createPostSchema } from "@/lib/validation";
 
 export async function submitPost(input: {
   content: string;
-  calories: string;
+  calories: number;
   mediaIds: string[];
 }) {
   const { user } = await validateRequest();
@@ -19,7 +19,7 @@ export async function submitPost(input: {
   const newPost = await prisma.post.create({
     data: {
       content,
-      calories: parseInt(calories),
+      calories,
       userId: user.id,
       attachments: {
         connect: mediaIds.map((id) => ({ id })),
