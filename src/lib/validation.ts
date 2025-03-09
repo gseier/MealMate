@@ -22,6 +22,7 @@ export type LoginValues = z.infer<typeof loginSchema>;
 
 export const createPostSchema = z.object({
   content: requiredString,
+  calories: z.string().regex(/^\d+$/, "Must be a number"),
   mediaIds: z.array(z.string()).max(5, "Cannot have more than 5 attachments"),
 });
 
