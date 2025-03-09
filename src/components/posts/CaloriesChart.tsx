@@ -14,7 +14,8 @@ export function CaloriesChart({ calories }: CaloriesChartProps) {
   const percentage = (calories / maxCalories) * 100;
   
   const chartData = [
-    { name: "Calories", value: calories, fill: "hsl(var(--chart-2))" }
+    { name: "Calories", value: calories, fill: "hsl(var(--chart-2))" },
+    { name: "Background", value: maxCalories, fill: "#E5E7EB" } // Light gray background
   ];
 
   return (
@@ -37,7 +38,7 @@ export function CaloriesChart({ calories }: CaloriesChartProps) {
           endAngle={90 - (percentage * 3.6)} // Dynamically adjust based on percentage
         >
           <PolarGrid radialLines={false} stroke="none" />
-          <RadialBar dataKey="value" maxBarSize={10} cornerRadius={10} background />
+          <RadialBar dataKey="value" maxBarSize={10} cornerRadius={10} background={{ fill: "#E5E7EB" }} animationDuration={0} />
           <PolarRadiusAxis tick={false} tickLine={false} axisLine={false} />
           <Label
             content={({ viewBox }) => {
