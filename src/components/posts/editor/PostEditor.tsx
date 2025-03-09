@@ -47,6 +47,22 @@ export default function PostEditor() {
       }),
     ],
   });
+  const calorieeditor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bold: false,
+        italic: false,
+      }),
+      Placeholder.configure({
+        placeholder: "Amount of calories in the meal...",
+      }),
+    ],
+  });
+
+  const calorieinput =
+    editor?.getText({
+      blockSeparator: "\n",
+    }) || "";
 
   const input =
     editor?.getText({
@@ -57,7 +73,7 @@ export default function PostEditor() {
     mutation.mutate(
       {
         content: input,
-        calories: 23,
+        calories: parseFloat(calorieinput) || 0,
         mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
       },
       {
@@ -83,6 +99,14 @@ export default function PostEditor() {
         <div {...rootProps} className="w-full">
           <EditorContent
             editor={editor}
+            className={cn(
+              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
+              isDragActive && "outline-dashed",
+            )}
+            onPaste={onPaste}
+          />
+          <EditorContent
+            editor={calorieeditor}
             className={cn(
               "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
               isDragActive && "outline-dashed",
