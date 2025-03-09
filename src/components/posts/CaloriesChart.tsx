@@ -7,8 +7,10 @@ interface CaloriesChartProps {
   calories: number;
 }
 
-export function CaloriesChart({ calories }: CaloriesChartProps) {
-  const maxCalories = 2200; // The daily goal
+export function CaloriesChart({ calories }: { calories: number }) {
+  console.log("Calories received:", calories); // Debugging log
+
+  const maxCalories = 2200;
   const chartData = [{ name: "Calories", value: calories, fill: "hsl(var(--chart-2))" }];
 
   return (
@@ -18,35 +20,26 @@ export function CaloriesChart({ calories }: CaloriesChartProps) {
         <CardDescription>Daily Intake</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <RadialBarChart
-          data={chartData}
-          startAngle={90}
-          endAngle={-270}
-          innerRadius={80}
-          outerRadius={110}
-          barSize={10}
-        >
-          <PolarGrid gridType="circle" radialLines={false} stroke="none" polarRadius={[86, 74]} />
-          <RadialBar dataKey="value" maxBarSize={10} cornerRadius={10} background />
-          <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-            <Label
-              content={({ viewBox }) => {
-                if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                  return (
-                    <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                      <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-4xl font-bold">
-                        {calories.toLocaleString()}
-                      </tspan>
-                      <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground">
-                        / {maxCalories}
-                      </tspan>
-                    </text>
-                  );
-                }
-              }}
-            />
-          </PolarRadiusAxis>
-        </RadialBarChart>
+        {calories > 0 ? (
+          <RadialBarChart
+            width={250}
+            height={250}
+            cx="50%"
+            cy="50%"
+            innerRadius="80%"
+            outerRadius="100%"
+            barSize={10}
+            data={chartData}
+            startAngle={90}
+            endAngle={-270}
+          >
+            <PolarGrid radialLines={false} stroke="none" />
+            <RadialBar dataKey="value" maxBarSize={10} cornerRadius={10} background />
+            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false} />
+          </RadialBarChart>
+        ) : (
+          <p>No Data</p> // If calories is 0, display a message
+        )}
       </CardContent>
     </Card>
   );
