@@ -13,6 +13,7 @@ export default function UserAvatar({
   size,
   className,
 }: UserAvatarProps) {
+  console.log('avatarUrl:', avatarUrl); // Debugging line
   return (
     <Image
       src={avatarUrl || avatarPlaceholder}
