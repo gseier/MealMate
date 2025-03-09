@@ -79,6 +79,7 @@ export default function PostEditor() {
       {
         onSuccess: () => {
           editor?.commands.clearContent();
+          calorieeditor?.commands.clearContent();
           resetMediaUploads();
         },
       },
