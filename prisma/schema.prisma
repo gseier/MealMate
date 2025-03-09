@@ -61,7 +61,7 @@ model Post {
   id                  String         @id @default(cuid())
   content             String
   userId              String
-  calories            String
+  calories            Int
   user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   attachments         Media[]
   likes               Like[]
