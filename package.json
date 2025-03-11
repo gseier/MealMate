@@ -1,6 +1,6 @@
 {
-  "name": "nextjs-15-social-media-app",
-  "version": "0.1.0",
+  "name": "mealmate-media-app",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,6 +12,8 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@lucia-auth/adapter-prisma": "^4.0.1",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
     "@prisma/client": "^5.16.1",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
