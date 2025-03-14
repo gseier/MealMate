@@ -1,9 +1,9 @@
 import TrendsSidebar from "@/components/TrendsSidebar";
 import { Metadata } from "next";
-import Bookmarks from "./Bookmarks";
+import Bookmarks from "./Mealplan";
 
 export const metadata: Metadata = {
-  title: "Bookmarks",
+  title: "Mealplan",
 };
 
 export default function Page() {
