@@ -38,7 +38,7 @@ export default function Bookmarks() {
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
       <p className="text-center text-muted-foreground">
-        You don&apos;t have any bookmarks yet.
+        You don&apos;t have any mealplan recipes yet.
       </p>
     );
   }
@@ -46,7 +46,7 @@ export default function Bookmarks() {
   if (status === "error") {
     return (
       <p className="text-center text-destructive">
-        An error occurred while loading bookmarks.
+        An error occurred while loading mealplan.
       </p>
     );
   }
