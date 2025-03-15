@@ -1,7 +1,6 @@
 "use server";
 
-import { lucia, validateRequest } from "@/auth";
-import { cookies } from "next/headers";
+import { invalidateSession, validateRequest, deleteSessionTokenCookie } from "@/auth";
 import { redirect } from "next/navigation";
 
 export async function logout() {
@@ -11,15 +10,8 @@ export async function logout() {
     throw new Error("Unauthorized");
   }
 
-  await lucia.invalidateSession(session.id);
-
-  const sessionCookie = lucia.createBlankSessionCookie();
-
-  cookies().set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes,
-  );
+  await invalidateSession(session.id);
+  await deleteSessionTokenCookie();
 
   return redirect("/login");
 }

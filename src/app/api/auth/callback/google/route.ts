@@ -1,4 +1,4 @@
-import { google, lucia } from "@/auth";
+import { google, createSession, setSessionTokenCookie, generateSessionToken} from "@/auth";
 import kyInstance from "@/lib/ky";
 import prisma from "@/lib/prisma";
 import streamServerClient from "@/lib/stream";
@@ -46,13 +46,11 @@ export async function GET(req: NextRequest) {
     });
 
     if (existingUser) {
-      const session = await lucia.createSession(existingUser.id, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
+      const token = generateSessionToken();
+  // Create the session using the token and the user's ID.
+      const session = await createSession(token, existingUser.id);
+  // Set the cookie directly (no need to get cookie name/value/attributes).
+      await setSessionTokenCookie(token, session.expiresAt);
       return new Response(null, {
         status: 302,
         headers: {
@@ -81,13 +79,9 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
+    const token = generateSessionToken();
+    const session = await createSession(token, userId);
+    await setSessionTokenCookie(token, session.expiresAt);
 
     return new Response(null, {
       status: 302,
