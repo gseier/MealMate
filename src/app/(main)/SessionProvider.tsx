@@ -1,6 +1,6 @@
 "use client";
 
-import { Session, User } from "lucia";
+import { Session, User } from "@prisma/client";
 import React, { createContext, useContext } from "react";
 
 interface SessionContext {

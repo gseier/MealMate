@@ -1,12 +1,11 @@
 "use server";
 
-import { lucia } from "@/auth";
 import prisma from "@/lib/prisma";
 import { loginSchema, LoginValues } from "@/lib/validation";
 import { verify } from "@node-rs/argon2";
 import { isRedirectError } from "next/dist/client/components/redirect";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { generateSessionToken, createSession, setSessionTokenCookie } from "@/auth";
 
 export async function login(
   credentials: LoginValues,
@@ -24,9 +23,7 @@ export async function login(
     });
 
     if (!existingUser || !existingUser.passwordHash) {
-      return {
-        error: "Incorrect username or password",
-      };
+      return { error: "Incorrect username or password" };
     }
 
     const validPassword = await verify(existingUser.passwordHash, password, {
@@ -37,25 +34,18 @@ export async function login(
     });
 
     if (!validPassword) {
-      return {
-        error: "Incorrect username or password",
-      };
+      return { error: "Incorrect username or password" };
     }
 
-    const session = await lucia.createSession(existingUser.id, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
+    // Generate a session token, create the session, and set the session cookie
+    const token = generateSessionToken();
+    const session = await createSession(token, existingUser.id);
+    await setSessionTokenCookie(token, session.expiresAt);
 
     return redirect("/");
   } catch (error) {
     if (isRedirectError(error)) throw error;
     console.error(error);
-    return {
-      error: "Something went wrong. Please try again.",
-    };
+    return { error: "Something went wrong. Please try again." };
   }
 }
