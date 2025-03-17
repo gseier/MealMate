@@ -1,6 +1,5 @@
 import { useToast } from "@/components/ui/use-toast";
 import { PostsPage } from "@/lib/types";
-import { useUploadThing } from "@/lib/uploadthing";
 import { UpdateUserProfileValues } from "@/lib/validation";
 import {
   InfiniteData,
@@ -18,8 +17,6 @@ export function useUpdateProfileMutation() {
 
   const queryClient = useQueryClient();
 
-  const { startUpload: startAvatarUpload } = useUploadThing("avatar");
-
   const mutation = useMutation({
     mutationFn: async ({
       values,
@@ -30,11 +27,9 @@ export function useUpdateProfileMutation() {
     }) => {
       return Promise.all([
         updateUserProfile(values),
-        avatar && startAvatarUpload([avatar]),
       ]);
     },
-    onSuccess: async ([updatedUser, uploadResult]) => {
-      const newAvatarUrl = uploadResult?.[0].serverData.avatarUrl;
+    onSuccess: async ([updatedUser]) => {
 
       const queryFilter: QueryFilters = {
         queryKey: ["post-feed"],
@@ -57,7 +52,6 @@ export function useUpdateProfileMutation() {
                     ...post,
                     user: {
                       ...updatedUser,
-                      avatarUrl: newAvatarUrl || updatedUser.avatarUrl,
                     },
                   };
                 }

@@ -8,7 +8,6 @@ import { createPostSchema } from "@/lib/validation";
 export async function submitPost(input: {
   content: string;
   calories: number;
-  mediaIds: string[];
 }) {
   const { user } = await validateRequest();
 

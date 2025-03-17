@@ -9,14 +9,12 @@ interface UserAvatarProps {
 }
 
 export default function UserAvatar({
-  avatarUrl,
   size,
   className,
 }: UserAvatarProps) {
-  console.log('avatarUrl:', avatarUrl); // Debugging line
   return (
     <Image
-      src={avatarUrl || avatarPlaceholder}
+      src={avatarPlaceholder}
       alt="User avatar"
       width={size ?? 48}
       height={size ?? 48}

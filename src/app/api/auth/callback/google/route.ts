@@ -1,10 +1,9 @@
 import { google, createSession, setSessionTokenCookie, generateSessionToken} from "@/auth";
 import kyInstance from "@/lib/ky";
 import prisma from "@/lib/prisma";
-import streamServerClient from "@/lib/stream";
 import { slugify } from "@/lib/utils";
 import { OAuth2RequestError } from "arctic";
-import { generateIdFromEntropySize } from "lucia";
+import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
@@ -59,7 +58,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const userId = generateIdFromEntropySize(10);
+    const userId = randomBytes(10).toString("hex");
 
     const username = slugify(googleUser.name) + "-" + userId.slice(0, 4);
 
@@ -72,11 +71,7 @@ export async function GET(req: NextRequest) {
           googleId: googleUser.id,
         },
       });
-      await streamServerClient.upsertUser({
-        id: userId,
-        username,
-        name: username,
-      });
+
     });
 
     const token = generateSessionToken();

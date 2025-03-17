@@ -1,12 +1,10 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import streamServerClient from "@/lib/stream";
 import { signUpSchema, SignUpValues } from "@/lib/validation";
 import { hash } from "@node-rs/argon2";
-import { generateIdFromEntropySize } from "lucia";
+import { randomBytes } from "crypto";
 import { isRedirectError } from "next/dist/client/components/redirect";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { generateSessionToken, createSession, setSessionTokenCookie } from "@/auth";
 
@@ -23,7 +21,7 @@ export async function signUp(
       parallelism: 1,
     });
 
-    const userId = generateIdFromEntropySize(10);
+    const userId = randomBytes(10).toString("hex");
 
     const existingUsername = await prisma.user.findFirst({
       where: {
@@ -60,11 +58,6 @@ export async function signUp(
           email,
           passwordHash,
         },
-      });
-      await streamServerClient.upsertUser({
-        id: userId,
-        username,
-        name: username,
       });
     });
 
