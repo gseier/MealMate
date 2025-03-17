@@ -34,7 +34,6 @@ export function getPostDataInclude(loggedInUserId: string) {
     user: {
       select: getUserDataSelect(loggedInUserId),
     },
-    attachments: true,
     likes: {
       where: {
         userId: loggedInUserId,
@@ -125,9 +124,5 @@ export interface BookmarkInfo {
 }
 
 export interface NotificationCountInfo {
-  unreadCount: number;
-}
-
-export interface MessageCountInfo {
   unreadCount: number;
 }
