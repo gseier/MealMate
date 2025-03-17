@@ -2,10 +2,8 @@
 
 import { useSession } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
-import { cn, formatRelativeDate } from "@/lib/utils";
-import { Media } from "@prisma/client";
+import { formatRelativeDate } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import Comments from "../comments/Comments";

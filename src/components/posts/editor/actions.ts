@@ -13,16 +13,13 @@ export async function submitPost(input: {
 
   if (!user) throw new Error("Unauthorized");
 
-  const { content, calories, mediaIds } = createPostSchema.parse(input);
+  const { content, calories } = createPostSchema.parse(input);
 
   const newPost = await prisma.post.create({
     data: {
       content,
       calories,
       userId: user.id,
-      attachments: {
-        connect: mediaIds.map((id) => ({ id })),
-      },
     },
     include: getPostDataInclude(user.id),
   });
