@@ -14,7 +14,7 @@ export function generateSessionToken(): string {
   return encodeBase32LowerCaseNoPadding(bytes);
 }
 
-// Create a new session in the database.
+// Create a new session in the database. yo
 // The session ID is the SHA-256 hash (hex-encoded) of the token.
 export async function createSession(token: string, userId: string): Promise<Session> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
