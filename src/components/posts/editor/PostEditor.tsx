@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSession } from "@/app/(main)/SessionProvider";
 import LoadingButton from "@/components/LoadingButton";
 import UserAvatar from "@/components/UserAvatar";
@@ -8,13 +9,14 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useSubmitPostMutation } from "./mutations";
+import FoodSearchBar from "@/components/foods/FoodSearchBar";
+import { SelectedFoodItem } from "@/components/foods/SelectedFood";
 import "./styles.css";
 
 export default function PostEditor() {
   const { user } = useSession();
 
   const mutation = useSubmitPostMutation();
-
 
   const editor = useEditor({
     extensions: [
@@ -49,16 +51,24 @@ export default function PostEditor() {
       blockSeparator: "\n",
     }) || "";
 
+  // New state for selected foods from the FoodSearchBar component
+  const [selectedFoods, setSelectedFoods] = useState<SelectedFoodItem[]>([]);
+
   function onSubmit() {
     mutation.mutate(
       {
         content: input,
         calories: parseInt(calorieinput) || 1,
+        foods: selectedFoods.map(sf => ({
+          name: sf.food.name,
+          amount: sf.amount,
+        })),
       },
       {
         onSuccess: () => {
           editor?.commands.clearContent();
           calorieeditor?.commands.clearContent();
+          setSelectedFoods([]);
         },
       },
     );
@@ -74,17 +84,17 @@ export default function PostEditor() {
             className={cn(
               "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3 mb-4",
             )}
-
           />
           <EditorContent
             editor={calorieeditor}
             className={cn(
               "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
             )}
-
           />
         </div>
       </div>
+      {/* Insert the FoodSearchBar below the editors */}
+      <FoodSearchBar onChange={setSelectedFoods} />
       <div className="flex items-center justify-end gap-3">
         <LoadingButton
           onClick={onSubmit}
@@ -97,4 +107,3 @@ export default function PostEditor() {
     </div>
   );
 }
-

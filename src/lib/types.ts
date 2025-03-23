@@ -56,6 +56,12 @@ export function getPostDataInclude(loggedInUserId: string) {
         comments: true,
       },
     },
+    // Added foods relation to include FoodOnPost data with the associated Food record.
+    foods: {
+      include: {
+        food: true,
+      },
+    },
   } satisfies Prisma.PostInclude;
 }
 

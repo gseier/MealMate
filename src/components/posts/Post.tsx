@@ -13,8 +13,7 @@ import UserTooltip from "../UserTooltip";
 import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
-import { CaloriesChart } from "./CaloriesChart"; // Adjust path if needed
-
+import { CaloriesChart } from "./CaloriesChart";
 
 interface PostProps {
   post: PostData;
@@ -22,11 +21,11 @@ interface PostProps {
 
 export default function Post({ post }: PostProps) {
   const { user } = useSession();
-
   const [showComments, setShowComments] = useState(false);
 
   return (
     <article className="group/post space-y-3 rounded-2xl bg-card p-5 shadow-sm">
+      {/* Post header */}
       <div className="flex justify-between gap-3">
         <div className="flex flex-wrap gap-3">
           <UserTooltip user={post.user}>
@@ -59,11 +58,30 @@ export default function Post({ post }: PostProps) {
           />
         )}
       </div>
+
+      {/* Post content and calories */}
       <Linkify>
         <div className="whitespace-pre-line break-words">{post.content}</div>
         <CaloriesChart calories={post.calories || 1} />
       </Linkify>
-      <hr className="text-muted-foreground" />
+
+      {/* Display attached foods */}
+      {post.foods && post.foods.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {post.foods.map((foodOnPost) => (
+            <span
+              key={foodOnPost.food.id}
+              className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
+            >
+              {foodOnPost.food.name} ({foodOnPost.amount}g)
+            </span>
+          ))}
+        </div>
+      )}
+
+      <hr className="border-t border-muted-foreground my-3" />
+
+      {/* Post actions */}
       <div className="flex justify-between gap-5">
         <div className="flex items-center gap-5">
           <LikeButton
@@ -82,16 +100,16 @@ export default function Post({ post }: PostProps) {
           postId={post.id}
           initialState={{
             isBookmarkedByUser: post.bookmarks.some(
-              (bookmark) => bookmark.userId === user.id,
+              (bookmark) => bookmark.userId === user.id
             ),
           }}
         />
       </div>
+
       {showComments && <Comments post={post} />}
     </article>
   );
 }
-
 
 interface CommentButtonProps {
   post: PostData;
@@ -101,10 +119,9 @@ interface CommentButtonProps {
 function CommentButton({ post, onClick }: CommentButtonProps) {
   return (
     <button onClick={onClick} className="flex items-center gap-2">
-      <MessageSquare className="size-5" />
+      <MessageSquare className="h-5 w-5" />
       <span className="text-sm font-medium tabular-nums">
-        {post._count.comments}{" "}
-        <span className="hidden sm:inline">comments</span>
+        {post._count.comments} <span className="hidden sm:inline">comments</span>
       </span>
     </button>
   );

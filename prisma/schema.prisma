@@ -62,12 +62,27 @@ model Post {
   bookmarks           Bookmark[]
   comments            Comment[]
   linkedNotifications Notification[]
-
+  foods      FoodOnPost[]
   createdAt DateTime @default(now())
 
   @@map("posts")
 }
 
+model Food {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  serving Int?
+  posts   FoodOnPost[]
+}
+
+model FoodOnPost {
+  postId   String
+  foodId   Int
+  amount   Int       // <-- add this field to store the grams for each post
+  post     Post  @relation(fields: [postId], references: [id])
+  food     Food  @relation(fields: [foodId], references: [id])
+  @@id([postId, foodId])
+}
 
 model Comment {
   id      String @id @default(cuid())
