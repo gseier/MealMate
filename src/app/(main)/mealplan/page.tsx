@@ -1,4 +1,3 @@
-import TrendsSidebar from "@/components/TrendsSidebar";
 import { Metadata } from "next";
 import Bookmarks from "./Mealplan";
 
@@ -15,7 +14,6 @@ export default function Page() {
         </div>
         <Bookmarks />
       </div>
-      <TrendsSidebar />
     </main>
   );
 }

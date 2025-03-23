@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import SelectedFood, { SelectedFoodItem, Food } from "./SelectedFood";
 import foodsData from "@/data/foods.json";
+import { Input } from "@/components/ui/input";
 
 interface FoodSearchBarProps {
   onChange: (selected: SelectedFoodItem[]) => void;
@@ -13,7 +14,7 @@ const FoodSearchBar: React.FC<FoodSearchBarProps> = ({ onChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    // Assume foodsData is an array of Food objects
+    // Initialize available foods from the foods data
     setAvailableFoods(foodsData);
   }, []);
 
@@ -22,6 +23,7 @@ const FoodSearchBar: React.FC<FoodSearchBarProps> = ({ onChange }) => {
   );
 
   const handleSelect = (food: Food) => {
+    // Remove the selected food from available list and add it to selected foods
     setAvailableFoods(prev => prev.filter(f => f.name !== food.name));
     const newItem: SelectedFoodItem = {
       food,
@@ -34,6 +36,7 @@ const FoodSearchBar: React.FC<FoodSearchBarProps> = ({ onChange }) => {
   };
 
   const handleRemove = (item: SelectedFoodItem) => {
+    // Remove food from selected foods and add it back to available foods
     const updated = selectedFoods.filter(sf => sf.food.name !== item.food.name);
     setSelectedFoods(updated);
     onChange(updated);
@@ -49,40 +52,54 @@ const FoodSearchBar: React.FC<FoodSearchBarProps> = ({ onChange }) => {
   };
 
   return (
-    <div className="space-y-2">
-      <input
-        type="text"
-        placeholder="Search food items..."
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        className="border p-2 rounded w-full"
-      />
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Add Food Items
+        </label>
+        <Input
+          type="text"
+          placeholder="Search for food items..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+        />
+      </div>
       {searchTerm && (
-        <ul className="border rounded p-2 max-h-40 overflow-y-auto">
+        <ul className="bg-background border border-muted-foreground rounded-md shadow-lg p-2 mt-1 max-h-40 overflow-y-auto">
           {filteredFoods.map(food => (
             <li
               key={food.name}
-              className="cursor-pointer p-1 hover:bg-gray-200"
+              className="cursor-pointer px-2 py-1 hover:bg-muted transition-colors"
               onClick={() => handleSelect(food)}
             >
               {food.name}
             </li>
           ))}
           {filteredFoods.length === 0 && (
-            <li className="text-gray-500">No food found</li>
+            <li className="text-sm text-muted-foreground px-2 py-1">
+              No food found
+            </li>
           )}
         </ul>
       )}
-      <div>
-        {selectedFoods.map(sf => (
-          <SelectedFood
-            key={sf.food.name}
-            selectedFood={sf}
-            onChange={handleAmountChange}
-            onRemove={handleRemove}
-          />
-        ))}
-      </div>
+      {selectedFoods.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+            Selected Foods
+          </h3>
+          <div className="space-y-2">
+            {selectedFoods.map(sf => (
+              <SelectedFood
+                key={sf.food.name}
+                selectedFood={sf}
+                onChange={handleAmountChange}
+                onRemove={handleRemove}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
