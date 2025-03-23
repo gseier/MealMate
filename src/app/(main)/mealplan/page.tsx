@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Bookmarks from "./Mealplan";
-import TrendsSidebar from "@/components/TrendsSidebar";
+import TrendsSidebar from "@/components/ToFollow";
 
 export const metadata: Metadata = {
   title: "Mealplan",

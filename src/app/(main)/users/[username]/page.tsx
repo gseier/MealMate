@@ -12,7 +12,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
-import TrendsSidebar from "@/components/TrendsSidebar";
+import TrendsSidebar from "@/components/ToFollow";
 
 interface PageProps {
   params: { username: string };
