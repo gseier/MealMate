@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
+import TrendsSidebar from "@/components/TrendsSidebar";
 
 interface PageProps {
   params: { username: string };
@@ -71,6 +72,7 @@ export default async function Page({ params: { username } }: PageProps) {
         </div>
         <UserPosts userId={user.id} />
       </div>
+      <TrendsSidebar />
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Bookmarks from "./Mealplan";
+import TrendsSidebar from "@/components/TrendsSidebar";
 
 export const metadata: Metadata = {
   title: "Mealplan",
@@ -14,6 +15,7 @@ export default function Page() {
         </div>
         <Bookmarks />
       </div>
+      <TrendsSidebar />
     </main>
   );
 }
