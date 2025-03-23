@@ -66,7 +66,7 @@ const FoodSearchBar: React.FC<FoodSearchBarProps> = ({ onChange }) => {
         />
       </div>
       {searchTerm && (
-        <ul className="bg-background border border-muted-foreground rounded-md shadow-lg p-2 mt-1 max-h-40 overflow-y-auto">
+        <ul className="bg-background border border-muted-foreground rounded-md shadow-lg p-2 mt-1 max-h-40 overflow-y-auto custom-scrollbar">
           {filteredFoods.map(food => (
             <li
               key={food.name}

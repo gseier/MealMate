@@ -71,7 +71,11 @@ export default function Post({ post }: PostProps) {
           {post.foods.map((foodOnPost) => (
             <span
               key={foodOnPost.food.id}
-              className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
+              className="px-2 py-1 rounded-full text-sm"
+              style={{
+                backgroundColor: "hsl(var(--accent))",
+                color: "hsl(var(--accent-foreground))",
+              }}
             >
               {foodOnPost.food.name} ({foodOnPost.amount}g)
             </span>
