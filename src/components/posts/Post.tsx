@@ -62,7 +62,7 @@ export default function Post({ post }: PostProps) {
       {/* Post content and calories */}
       <Linkify>
         <div className="whitespace-pre-line break-words">{post.content}</div>
-        <CaloriesChart calories={post.calories || 1} />
+        {post.foods && post.foods.length > 0 && <CaloriesChart foods={post.foods} />}
       </Linkify>
 
       {/* Display attached foods */}
