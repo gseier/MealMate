@@ -53,11 +53,11 @@ export function CaloriesChart({ foods }: CaloriesChartProps) {
     return { totalFat, totalProteins, totalCarbs, totalCalories };
   }, [foods]);
 
-  // Create chart data for the three segments.
+  // Create chart data for the three segments with distinct colors.
   const chartData = [
-    { nutrient: "Fat", value: totals.totalFat, fill: "var(--chart-1)" },
-    { nutrient: "Proteins", value: totals.totalProteins, fill: "var(--chart-2)" },
-    { nutrient: "Carbs", value: totals.totalCarbs, fill: "var(--chart-3)" },
+    { nutrient: "Fat", value: totals.totalFat, fill: "hsl(10, 70%, 50%)" },
+    { nutrient: "Proteins", value: totals.totalProteins, fill: "hsl(120, 70%, 50%)" },
+    { nutrient: "Carbs", value: totals.totalCarbs, fill: "hsl(220, 70%, 50%)" },
   ];
 
   return (
@@ -70,7 +70,14 @@ export function CaloriesChart({ foods }: CaloriesChartProps) {
         <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px]">
           <PieChart>
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie data={chartData} dataKey="value" nameKey="nutrient" innerRadius={60} strokeWidth={5}>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="nutrient"
+              innerRadius={60}
+              strokeWidth={5}
+              isAnimationActive={false}
+            >
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
