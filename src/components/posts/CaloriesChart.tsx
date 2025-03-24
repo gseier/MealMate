@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="bg-background p-2 border rounded shadow">
         {payload.map((entry: any, index: number) => (
           <div key={`tooltip-${index}`} style={{ color: entry.fill }}>
-            {entry.name}: {entry.value}g
+            {entry.name}: {Math.round(entry.value)}g
           </div>
         ))}
       </div>
