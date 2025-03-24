@@ -29,22 +29,6 @@ export default function PostEditor() {
       }),
     ],
   });
-  const calorieeditor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        bold: false,
-        italic: false,
-      }),
-      Placeholder.configure({
-        placeholder: "Amount of calories in the meal...",
-      }),
-    ],
-  });
-
-  const calorieinput =
-    calorieeditor?.getText({
-      blockSeparator: "\n",
-    }) || "";
 
   const input =
     editor?.getText({
@@ -58,7 +42,6 @@ export default function PostEditor() {
     mutation.mutate(
       {
         content: input,
-        calories: parseInt(calorieinput) || 1,
         foods: selectedFoods.map(sf => ({
           name: sf.food.name,
           amount: sf.amount,
@@ -67,7 +50,6 @@ export default function PostEditor() {
       {
         onSuccess: () => {
           editor?.commands.clearContent();
-          calorieeditor?.commands.clearContent();
           setSelectedFoods([]);
         },
       },
@@ -83,12 +65,6 @@ export default function PostEditor() {
             editor={editor}
             className={cn(
               "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3 mb-4",
-            )}
-          />
-          <EditorContent
-            editor={calorieeditor}
-            className={cn(
-              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
             )}
           />
         </div>

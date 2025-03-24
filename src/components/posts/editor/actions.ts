@@ -7,19 +7,17 @@ import { createPostSchema } from "@/lib/validation";
 
 export async function submitPost(input: {
   content: string;
-  calories: number;
   foods: { name: string; amount: number }[];
 }) {
   const { user } = await validateRequest();
   if (!user) throw new Error("Unauthorized");
 
   // Validate post fields (foods are passed as-is)
-  const { content, calories } = createPostSchema.parse(input);
+  const { content } = createPostSchema.parse(input);
 
   const newPost = await prisma.post.create({
     data: {
       content,
-      calories,
       userId: user.id,
       foods: {
         create: input.foods.map((foodItem) => ({

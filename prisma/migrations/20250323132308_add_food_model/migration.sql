@@ -36,7 +36,6 @@ CREATE TABLE "posts" (
     "id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "calories" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "posts_pkey" PRIMARY KEY ("id")
