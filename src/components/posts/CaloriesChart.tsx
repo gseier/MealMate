@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PieChart, Pie, Label } from "recharts";
+import { PieChart, Pie, Label, Tooltip } from "recharts";
 import {
   Card,
   CardContent,
@@ -10,11 +10,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 import foodsData from "@/data/foods.json";
 
 export interface PostFoodItem {
@@ -28,6 +24,22 @@ export interface PostFoodItem {
 interface CaloriesChartProps {
   foods: PostFoodItem[];
 }
+
+// Custom tooltip that appends "g" after each nutrient value
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background p-2 border rounded shadow">
+        {payload.map((entry: any, index: number) => (
+          <div key={`tooltip-${index}`} style={{ color: entry.fill }}>
+            {entry.name}: {entry.value}g
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export function CaloriesChart({ foods }: CaloriesChartProps) {
   // Compute totals by looking up each food's nutritional info in foodsData.
@@ -53,11 +65,14 @@ export function CaloriesChart({ foods }: CaloriesChartProps) {
     return { totalFat, totalProteins, totalCarbs, totalCalories };
   }, [foods]);
 
+  // Destructure totals for convenience.
+  const { totalFat, totalProteins, totalCarbs, totalCalories } = totals;
+
   // Create chart data for the three segments with distinct colors.
   const chartData = [
-    { nutrient: "Fat", value: totals.totalFat, fill: "hsl(10, 70%, 50%)" },
-    { nutrient: "Proteins", value: totals.totalProteins, fill: "hsl(120, 70%, 50%)" },
-    { nutrient: "Carbs", value: totals.totalCarbs, fill: "hsl(220, 70%, 50%)" },
+    { nutrient: "Fat", value: totalFat, fill: "hsl(10, 70%, 50%)" },
+    { nutrient: "Proteins", value: totalProteins, fill: "hsl(120, 70%, 50%)" },
+    { nutrient: "Carbs", value: totalCarbs, fill: "hsl(220, 70%, 50%)" },
   ];
 
   return (
@@ -69,7 +84,7 @@ export function CaloriesChart({ foods }: CaloriesChartProps) {
       <CardContent className="flex-1 pb-0">
         <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px]">
           <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <Tooltip content={<CustomTooltip />} cursor={false} />
             <Pie
               data={chartData}
               dataKey="value"
@@ -93,7 +108,7 @@ export function CaloriesChart({ foods }: CaloriesChartProps) {
                           y={viewBox.cy}
                           className="fill-foreground text-3xl font-bold"
                         >
-                          {Math.round(totals.totalCalories)}
+                          {Math.round(totalCalories)}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
