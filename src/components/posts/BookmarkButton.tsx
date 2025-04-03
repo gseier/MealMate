@@ -1,200 +1,215 @@
+"use client";
+
+import React from "react";
 import kyInstance from "@/lib/ky";
 import { BookmarkInfo } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import {
-  QueryKey,
-  useMutation,
   useQuery,
+  useMutation,
   useQueryClient,
+  QueryKey,
 } from "@tanstack/react-query";
-import { Utensils, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "../ui/use-toast";
-import React, { useState } from "react";
+import { Utensils, ChevronDown, XCircle } from "lucide-react";
 
 const DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 
 interface BookmarkButtonProps {
   postId: string;
-  initialState: BookmarkInfo;
+  initialState: BookmarkInfo; // e.g. { isBookmarkedByUser: boolean, day: string | null }
 }
 
 export default function BookmarkButton({ postId, initialState }: BookmarkButtonProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const queryKey: QueryKey = ["bookmark-info", postId];
+  // A stable QueryKey for this post's bookmark info
+  const bookmarkQueryKey: QueryKey = ["bookmark-info", postId];
 
-  // 1) UseQuery to fetch { isBookmarkedByUser, day }
-  const { data } = useQuery({
-    queryKey,
-    queryFn: () => kyInstance.get(`/api/posts/${postId}/bookmark`).json<BookmarkInfo>(),
+  // ---- 1) Query: is the post bookmarked, and which day? ----
+  const { data: bookmarkData } = useQuery<BookmarkInfo>({
+    queryKey: bookmarkQueryKey,
+    queryFn: async () => {
+      return kyInstance.get(`/api/posts/${postId}/bookmark`).json<BookmarkInfo>();
+    },
     initialData: initialState,
     staleTime: Infinity,
   });
 
-  // 2) Mutation to toggle bookmark on/off
-  const toggleMutation = useMutation({
-    mutationFn: () =>
-      data.isBookmarkedByUser
-        ? kyInstance.delete(`/api/posts/${postId}/bookmark`)
-        : kyInstance.post(`/api/posts/${postId}/bookmark`),
-    onMutate: async () => {
-      toast({
-        description: `Recipe ${
-          data.isBookmarkedByUser ? "removed from" : "added to"
-        } mealplan`,
-      });
-      await queryClient.cancelQueries({ queryKey });
-
-      // Flip isBookmarked, clear day if user just removed the bookmark
-      const previousState = queryClient.getQueryData<BookmarkInfo>(queryKey);
-      queryClient.setQueryData<BookmarkInfo>(queryKey, (old) => {
-        if (!old) {
-          // If there was no previous data, create a new object
-          return {
-            isBookmarkedByUser: true,
-            day: null,
-          };
-        }
-        // Otherwise, return the old data plus any changes
-        return {
-          ...old,
-          isBookmarkedByUser: !old.isBookmarkedByUser,
-          // If user is removing the bookmark, reset day to null
-          day: old.isBookmarkedByUser ? null : old.day,
-        };
-      });
-
-      return { previousState };
-    },
-    onError: (error, variables, context) => {
-      queryClient.setQueryData(queryKey, context?.previousState);
-      toast({
-        variant: "destructive",
-        description: "Something went wrong. Please try again.",
+  // ---- 2) createBookmark: POST /bookmark with chosen day ----
+  const createBookmarkMutation = useMutation({
+    mutationFn: async (day: string) => {
+      return kyInstance.post(`/api/posts/${postId}/bookmark`, {
+        json: { day },
       });
     },
-    onSettled: () => {
-      // Re-fetch the bookmark info to be sure day is correct
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
+    onMutate: async (chosenDay: string) => {
+      // Cancel queries so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: bookmarkQueryKey });
+      // Snapshot previous data
+      const prev = queryClient.getQueryData<BookmarkInfo>(bookmarkQueryKey);
 
-  // 3) Mutation to set/clear the day (PATCH)
-  const setDayMutation = useMutation({
-    mutationFn: (newDay: string | null) =>
-      kyInstance.patch(`/api/posts/${postId}/bookmark`, {
-        json: { day: newDay },
-      }),
-    onMutate: async (newDay) => {
-      await queryClient.cancelQueries({ queryKey });
+      // Optimistically set the local data
+      queryClient.setQueryData<BookmarkInfo>(bookmarkQueryKey, () => ({
+        isBookmarkedByUser: true,
+        day: chosenDay,
+      }));
 
-      const prev = queryClient.getQueryData<BookmarkInfo>(queryKey);
-      // Optimistic update
-      queryClient.setQueryData<BookmarkInfo>(queryKey, (old) => {
-        if (!old) {
-          // If there was no previous data, create a new object
-          return {
-            isBookmarkedByUser: true,
-            day: null,
-          };
-        }
-        // Otherwise, return the old data plus any changes
-        return {
-          ...old,
-          isBookmarkedByUser: !old.isBookmarkedByUser,
-          // If user is removing the bookmark, reset day to null
-          day: old.isBookmarkedByUser ? null : old.day,
-        };
-      });
       return { prev };
     },
-    onError: (error, variables, context) => {
+    onError: (err, vars, context) => {
+      // Revert on error
       if (context?.prev) {
-        queryClient.setQueryData(queryKey, context.prev);
+        queryClient.setQueryData(bookmarkQueryKey, context.prev);
       }
       toast({
         variant: "destructive",
-        description: "Day assignment failed. Please try again.",
+        description: "Failed to bookmark. Please try again.",
       });
     },
+    onSuccess: () => {
+      toast({ description: "Recipe added to mealplan" });
+    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+      // Re-fetch to ensure correct final data
+      queryClient.invalidateQueries({ queryKey: bookmarkQueryKey });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks-by-day"] });
     },
   });
 
-  // If no data yet, return null or a skeleton
-  if (!data) return null;
+  // ---- 3) updateDay: PATCH /bookmark to change day ----
+  const updateDayMutation = useMutation({
+    mutationFn: async (newDay: string) => {
+      return kyInstance.patch(`/api/posts/${postId}/bookmark`, {
+        json: { day: newDay },
+      });
+    },
+    onMutate: async (newDay) => {
+      await queryClient.cancelQueries({ queryKey: bookmarkQueryKey });
+      const prev = queryClient.getQueryData<BookmarkInfo>(bookmarkQueryKey);
 
-  // Render a button + optional day selection
+      // Update day optimistically
+      queryClient.setQueryData<BookmarkInfo>(bookmarkQueryKey, (old) => {
+        if (!old) {
+          return { isBookmarkedByUser: true, day: newDay };
+        }
+        return { ...old, day: newDay };
+      });
+
+      return { prev };
+    },
+    onError: (err, vars, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(bookmarkQueryKey, context.prev);
+      }
+      toast({
+        variant: "destructive",
+        description: "Failed to set day. Please try again.",
+      });
+    },
+    onSuccess: () => {
+      toast({ description: "Day updated" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bookmarkQueryKey });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks-by-day"] });
+    },
+  });
+
+  // ---- 4) removeBookmark: DELETE /bookmark ----
+  const removeBookmarkMutation = useMutation({
+    mutationFn: async () => {
+      return kyInstance.delete(`/api/posts/${postId}/bookmark`);
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: bookmarkQueryKey });
+      const prev = queryClient.getQueryData<BookmarkInfo>(bookmarkQueryKey);
+
+      // Optimistically set it to not bookmarked
+      queryClient.setQueryData<BookmarkInfo>(bookmarkQueryKey, () => ({
+        isBookmarkedByUser: false,
+        day: "",
+      }));
+
+      return { prev };
+    },
+    onError: (err, vars, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(bookmarkQueryKey, context.prev);
+      }
+      toast({
+        variant: "destructive",
+        description: "Failed to remove from mealplan. Please try again.",
+      });
+    },
+    onSuccess: () => {
+      toast({ description: "Removed from mealplan" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bookmarkQueryKey });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks-by-day"] });
+    },
+  });
+
+  // If we still have no data, show nothing or a skeleton
+  if (!bookmarkData) {
+    return null;
+  }
+
+  // Decide button label
+  const label = bookmarkData.isBookmarkedByUser
+    ? `Mealplan: ${bookmarkData.day ?? "?"}`
+    : "Add to Mealplan";
+
+  // ---- 5) The rendered dropdown button ----
   return (
-    <div className="flex items-center gap-2">
-      <button onClick={() => toggleMutation.mutate()}>
-        <Utensils
-          className={cn(
-            "size-5",
-            data.isBookmarkedByUser && "fill-primary text-primary"
-          )}
-        />
-      </button>
-
-      {data.isBookmarkedByUser && (
-        <DayDropdown
-          currentDay={data.day}
-          onSelectDay={(day) => setDayMutation.mutate(day)}
-        />
-      )}
-    </div>
-  );
-}
-
-function DayDropdown({
-  currentDay,
-  onSelectDay,
-}: {
-  currentDay: string | null;
-  onSelectDay: (day: string | null) => void;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="px-2 py-1 border rounded flex items-center gap-1"
-      >
-        {currentDay ?? "Assign Day"}
-        <ChevronDown className="h-3 w-3" />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 mt-1 p-2 bg-white border shadow rounded z-10">
-          {DAYS.map((d) => (
-            <div
-              key={d}
-              onClick={() => {
-                onSelectDay(d);
-                setOpen(false);
-              }}
-              className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-1 px-2 py-1 border rounded text-sm hover:bg-gray-100">
+          <Utensils className="h-4 w-4" />
+          {label}
+          <ChevronDown className="h-3 w-3" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>Pick a Day</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {DAYS.map((d) => (
+          <DropdownMenuItem
+            key={d}
+            onClick={() => {
+              // If not bookmarked, create with chosen day. Otherwise, update day
+              if (!bookmarkData.isBookmarkedByUser) {
+                createBookmarkMutation.mutate(d);
+              } else {
+                updateDayMutation.mutate(d);
+              }
+            }}
+          >
+            {d}
+          </DropdownMenuItem>
+        ))}
+        {bookmarkData.isBookmarkedByUser && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-red-500"
+              onClick={() => removeBookmarkMutation.mutate()}
             >
-              {d}
-            </div>
-          ))}
-          {/* Option to clear/unassign the day */}
-          {currentDay && (
-            <div
-              onClick={() => {
-                onSelectDay(null);
-                setOpen(false);
-              }}
-              className="cursor-pointer text-sm text-red-500 hover:bg-gray-100 px-2 py-1 rounded mt-2"
-            >
-              Clear Day
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+              <XCircle className="h-4 w-4 mr-2" />
+              Remove from Mealplan
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
