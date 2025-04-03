@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-// You said you have a snippet like validateRequest():
+import prisma from "@/lib/prisma"
 import { validateRequest } from "@/auth"; 
-// Removed unused import of Response from "next/server"
 
 export async function GET(req: NextRequest, { params }: { params: { postId: string } }) {
   // 1) Validate request, check if user is logged in

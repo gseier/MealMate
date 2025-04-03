@@ -78,7 +78,7 @@ model FoodOnPost {
   postId   String
   foodId   Int
   amount   Int       // <-- add this field to store the grams for each post
-  post     Post  @relation(fields: [postId], references: [id])
+  post     Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
   food     Food  @relation(fields: [foodId], references: [id])
   @@id([postId, foodId])
 }
@@ -116,7 +116,7 @@ model Bookmark {
   createdAt DateTime @default(now())
   updatedAt DateTime  @updatedAt
 
-  day String?
+  day String
 
   @@unique([userId, postId])
   @@map("bookmarks")

@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       // If your Post model includes 'foods' for calorie calculation, do:
       post: {
         include: {
+          user: true,
           foods: true, // Adjust to your schema
         },
       },
