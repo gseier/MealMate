@@ -116,7 +116,7 @@ model Bookmark {
   createdAt DateTime @default(now())
   updatedAt DateTime  @updatedAt
 
-  day String
+  day String?
 
   @@unique([userId, postId])
   @@map("bookmarks")

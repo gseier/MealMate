@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
         include: {
           user: true,
           foods: true, // Adjust to your schema
+          likes: true,
+          bookmarks: true,
         },
       },
     },
