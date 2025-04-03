@@ -128,16 +128,18 @@ export default function BookmarkButton({ postId, initialState }: BookmarkButtonP
   const removeBookmarkMutation = useMutation({
     mutationFn: async () => {
       const response = await kyInstance.delete(`/api/posts/${postId}/bookmark`);
-      if (response.status === 204) {
-        // No content to parse – simply return a success object.
+      // Try to read the response as text.
+      const text = await response.text();
+      // If the text is empty, consider it a success.
+      if (!text) {
         return { success: true };
       }
-      return response.json();
+      // Otherwise, parse it as JSON.
+      return JSON.parse(text);
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: bookmarkQueryKey });
       const prev = queryClient.getQueryData<BookmarkInfo>(bookmarkQueryKey);
-      // Optimistically set it to not bookmarked
       queryClient.setQueryData<BookmarkInfo>(bookmarkQueryKey, () => ({
         isBookmarkedByUser: false,
         day: "",
@@ -161,6 +163,7 @@ export default function BookmarkButton({ postId, initialState }: BookmarkButtonP
       queryClient.invalidateQueries({ queryKey: ["bookmarks-by-day"] });
     },
   });
+  
   
 
   // If we still have no data, show nothing or a skeleton
