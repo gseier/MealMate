@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Bookmarks from "./Mealplan";
+import Mealplan from "./Mealplan";
 import TrendsSidebar from "@/components/ToFollow";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function Page() {
         <div className="rounded-2xl bg-card p-5 shadow-sm">
           <h1 className="text-center text-2xl font-bold">Mealplan</h1>
         </div>
-        <Bookmarks />
+        <Mealplan />
       </div>
       <TrendsSidebar />
     </main>
