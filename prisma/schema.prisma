@@ -114,6 +114,9 @@ model Bookmark {
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime  @updatedAt
+
+  day String?
 
   @@unique([userId, postId])
   @@map("bookmarks")
