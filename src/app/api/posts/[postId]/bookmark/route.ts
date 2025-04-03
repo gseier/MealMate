@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: { postId: stri
   // 3) Return minimal info (isBookmarked + current day)
   return NextResponse.json({
     isBookmarkedByUser: !!bookmark,
-    day: bookmark?.day || null,
+    day: bookmark?.day,
   });
 }
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { postId: str
     data: {
       userId: loggedInUser.id,
       postId: params.postId,
-      day: null,
+      day: "MONDAY",
     },
   });
 
