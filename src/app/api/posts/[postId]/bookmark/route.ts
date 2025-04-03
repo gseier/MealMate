@@ -11,13 +11,13 @@ export async function GET(req: NextRequest, { params }: { params: { postId: stri
 
   // 2) Check if there's a bookmark for this user+post
   const bookmark = await prisma.bookmark.findFirst({
-    where: { userId: loggedInUser.id, postId: params.postId },
+    where: { userId: loggedInUser.id, postId: params.postId, day: { not: null } },
   });
 
   // 3) Return minimal info (isBookmarked + current day)
   return NextResponse.json({
     isBookmarkedByUser: !!bookmark,
-    day: bookmark?.day || null,
+    day: bookmark?.day,
   });
 }
 
@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { postId: st
       postId: params.postId,
     },
     data: {
-      day: day || null,
+      day: day,
     },
   });
 

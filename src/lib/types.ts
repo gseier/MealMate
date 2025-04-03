@@ -127,7 +127,7 @@ export interface LikeInfo {
 
 export interface BookmarkInfo {
   isBookmarkedByUser: boolean;
-  day: string | null;
+  day: string;
 }
 
 export interface NotificationCountInfo {
