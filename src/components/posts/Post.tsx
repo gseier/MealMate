@@ -107,7 +107,7 @@ export default function Post({ post }: PostProps) {
               isBookmarkedByUser: post.bookmarks.some(
                 (bookmark) => bookmark.userId === user.id
               ),
-              day: "MONDAY",
+              day: "",
            }}
           />
        )}

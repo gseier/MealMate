@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { postId: str
     data: {
       userId: loggedInUser.id,
       postId: params.postId,
-      day: "MONDAY",
+      day: "",
     },
   });
 
