@@ -11,13 +11,13 @@ export async function GET(req: NextRequest, { params }: { params: { postId: stri
 
   // 2) Check if there's a bookmark for this user+post
   const bookmark = await prisma.bookmark.findFirst({
-    where: { userId: loggedInUser.id, postId: params.postId, day: { not: null } },
+    where: { userId: loggedInUser.id, postId: params.postId },
   });
 
   // 3) Return minimal info (isBookmarked + current day)
   return NextResponse.json({
     isBookmarkedByUser: !!bookmark,
-    day: bookmark ? bookmark.day : null
+    day: bookmark ? bookmark.day : "",
   }, { status: 200 });
 }
 
