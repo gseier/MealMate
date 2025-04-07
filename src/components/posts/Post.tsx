@@ -10,7 +10,6 @@ import Comments from "../comments/Comments";
 import Linkify from "../Linkify";
 import UserAvatar from "../UserAvatar";
 import UserTooltip from "../UserTooltip";
-import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
 import { CaloriesChart } from "./CaloriesChart";
@@ -100,17 +99,6 @@ export default function Post({ post }: PostProps) {
             onClick={() => setShowComments(!showComments)}
           />
         </div>
-        {post.foods && post.foods.length > 0 && (
-          <BookmarkButton
-           postId={post.id}
-           initialState={{
-              isBookmarkedByUser: post.bookmarks.some(
-                (bookmark) => bookmark.userId === user.id
-              ),
-              day: "",
-           }}
-          />
-       )}
       </div>
 
       {showComments && <Comments post={post} />}
