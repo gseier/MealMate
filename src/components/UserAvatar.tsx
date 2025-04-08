@@ -8,17 +8,17 @@ interface UserAvatarProps {
   // ...or a direct avatarUrl string may be provided.
   avatarUrl?: string | null;
   size?: number;
+  // Accept a className for additional styling.
+  className?: string;
 }
 
 export default function UserAvatar({
   user,
   avatarUrl,
   size = 40,
+  className = "",
 }: UserAvatarProps) {
-  // Determine the URL to display:
-  // 1. If a user object was provided, use its avatarUrl.
-  // 2. Otherwise, if an avatarUrl prop is provided, use it.
-  // 3. Fallback to a default placeholder.
+  // Determine the image source:
   const finalAvatarUrl =
     user?.avatarUrl || avatarUrl || avatarPlaceholder.src;
 
@@ -28,7 +28,8 @@ export default function UserAvatar({
       alt={`${user?.displayName || "User"} Avatar`}
       width={size}
       height={size}
-      className="rounded-full"
+      // Combine a default rounded style with any additional classes passed
+      className={`rounded-full ${className}`}
     />
   );
 }
