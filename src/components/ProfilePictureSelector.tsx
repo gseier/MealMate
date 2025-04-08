@@ -8,10 +8,10 @@ interface ProfilePictureSelectorProps {
 
 // List the avatar paths from the public folder.
 const avatars = [
-  "/avatars/avatar1.png",
-  "/avatars/avatar2.png",
-  "/avatars/avatar3.png",
-  "/avatars/avatar4.png",
+  "/avatar1.png",
+  "/avatar2.png",
+  "/avatar3.png",
+  "/avatar4.png",
 ];
 
 const ProfilePictureSelector: React.FC<ProfilePictureSelectorProps> = ({ selected, onSelect }) => {
