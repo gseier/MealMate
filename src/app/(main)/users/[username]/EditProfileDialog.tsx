@@ -16,20 +16,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserData } from "@/lib/types";
+import ProfilePictureSelector from "@/components/ProfilePictureSelector";
 import {
   updateUserProfileSchema,
   UpdateUserProfileValues,
 } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera } from "lucide-react";
-import Image, { StaticImageData } from "next/image";
-import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import Resizer from "react-image-file-resizer";
+import { useState } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { useUpdateProfileMutation } from "./mutations";
+import Image from "next/image";
 
 interface EditProfileDialogProps {
   user: UserData;
@@ -42,27 +40,31 @@ export default function EditProfileDialog({
   open,
   onOpenChange,
 }: EditProfileDialogProps) {
+  // Added avatarUrl to defaultValues so that it's part of the form values.
   const form = useForm<UpdateUserProfileValues>({
     resolver: zodResolver(updateUserProfileSchema),
     defaultValues: {
       displayName: user.displayName,
       bio: user.bio || "",
+      avatarUrl: user.avatarUrl || "",
     },
   });
 
   const mutation = useUpdateProfileMutation();
 
+  // State for a cropped avatar if the user uploads and crops one
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
+  // New state to track the selected pre-built avatar URL.
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string>(
+    user.avatarUrl || avatarPlaceholder.src
+  );
 
   async function onSubmit(values: UpdateUserProfileValues) {
-    const newAvatarFile = croppedAvatar
-      ? new File([croppedAvatar], `avatar_${user.id}.webp`)
-      : undefined;
-
     mutation.mutate(
       {
-        values,
-        avatar: newAvatarFile,
+        values: { ...values, avatarUrl: selectedAvatarUrl },
+        // Only pass a File if croppedAvatar exists; otherwise, undefined.
+        avatar: croppedAvatar ? new File([croppedAvatar], `avatar_${user.id}.webp`) : undefined,
       },
       {
         onSuccess: () => {
@@ -111,6 +113,17 @@ export default function EditProfileDialog({
                 </FormItem>
               )}
             />
+            <div className="mb-4">
+              <FormLabel>Profile Picture</FormLabel>
+              <ProfilePictureSelector
+                selected={selectedAvatarUrl}
+                onSelect={(avatar) => {
+                  setSelectedAvatarUrl(avatar);
+                  // Clear any cropped image if a pre-built avatar is chosen.
+                  setCroppedAvatar(null);
+                }}
+              />
+            </div>
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
                 Save
