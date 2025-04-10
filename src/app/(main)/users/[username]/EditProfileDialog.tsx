@@ -25,9 +25,8 @@ import {
 } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useUpdateProfileMutation } from "./mutations";
-import Image from "next/image";
 
 interface EditProfileDialogProps {
   user: UserData;
