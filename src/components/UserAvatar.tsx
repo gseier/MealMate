@@ -28,6 +28,7 @@ export default function UserAvatar({
       alt={`${user?.displayName || "User"} Avatar`}
       width={size}
       height={size}
+      style={{ objectFit: "cover", aspectRatio: 1 }}
       // Combine a default rounded style with any additional classes passed
       className={`rounded-full ${className}`}
     />
