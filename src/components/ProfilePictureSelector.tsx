@@ -16,7 +16,7 @@ const avatars = [
 
 const ProfilePictureSelector: React.FC<ProfilePictureSelectorProps> = ({ selected, onSelect }) => {
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-4 items-start">
       {avatars.map((avatar) => (
         <div
           key={avatar}
