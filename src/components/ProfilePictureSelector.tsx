@@ -21,11 +21,11 @@ const ProfilePictureSelector: React.FC<ProfilePictureSelectorProps> = ({ selecte
         <div
           key={avatar}
           onClick={() => onSelect(avatar)}
-          className={`cursor-pointer p-1 rounded-lg border-2 ${
+          className={`cursor-pointer rounded-lg border-2 ${
             selected === avatar ? "border-blue-500" : "border-transparent"
           }`}
         >
-          <Image src={avatar} alt="Avatar" width={80} height={80} />
+          <Image src={avatar} alt="Avatar" width={80} height={80} className="rounded-lg" />
         </div>
       ))}
     </div>
