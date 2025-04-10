@@ -1,4 +1,4 @@
-import avatarPlaceholder from "/avatar1.png";
+import avatarPlaceholder from "@/avatar-placeholder.png";
 import Image from "next/image";
 import { UserData } from "@/lib/types";
 
