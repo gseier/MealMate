@@ -60,8 +60,8 @@ export default async function Page({ params: { username } }: PageProps) {
   const user = await getUser(username, loggedInUser.id);
 
   return (
-    <main className="flex w-full min-w-0 gap-5">
-      <div className="w-full min-w-0 space-y-5">
+    <main className="flex w-full min-w-0 gap-6">
+      <div className="w-full min-w-0 space-y-6">
         <UserProfile user={user} loggedInUserId={loggedInUser.id} />
 
         <section className="rounded-2xl bg-card p-5 shadow-sm">
@@ -94,48 +94,54 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
   const isOwnProfile = user.id === loggedInUserId;
 
   return (
-    <section className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <UserAvatar
-        avatarUrl={user.avatarUrl}
-        size={250}
-        className="mx-auto max-h-60 max-w-60 rounded-full"
-      />
+    <section className="rounded-2xl bg-card p-6 shadow-sm space-y-6">
+      {/* Top section with avatar and profile controls */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6">
+        <UserAvatar
+          avatarUrl={user.avatarUrl}
+          size={96}
+          className="mx-auto sm:mx-0 rounded-full shadow"
+        />
 
-      <div className="flex flex-wrap items-start gap-4 sm:flex-nowrap">
-        <div className="me-auto space-y-3">
-          <div>
-            <h1 className="text-3xl font-bold">{user.displayName}</h1>
-            <p className="text-muted-foreground">@{user.username}</p>
+        <div className="flex-1 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">{user.displayName}</h1>
+              <p className="text-sm text-muted-foreground">@{user.username}</p>
+              <p className="text-xs text-muted-foreground">
+                Member since {formatDate(user.createdAt, "MMM d, yyyy")}
+              </p>
+            </div>
+
+            <div className="mt-4 sm:mt-0">
+              {isOwnProfile ? (
+                <EditProfileButton user={user} />
+              ) : (
+                <FollowButton userId={user.id} initialState={followerInfo} />
+              )}
+            </div>
           </div>
 
-          <p className="text-sm">Member since {formatDate(user.createdAt, "MMM d, yyyy")}</p>
-
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap gap-4 text-sm">
             <span>
               Posts:{" "}
-              <span className="font-semibold">{formatNumber(user._count.posts)}</span>
+              <span className="font-semibold">
+                {formatNumber(user._count.posts)}
+              </span>
             </span>
 
             <FollowerCount userId={user.id} initialState={followerInfo} />
           </div>
         </div>
-
-        {isOwnProfile ? (
-          <EditProfileButton user={user} />
-        ) : (
-          <FollowButton userId={user.id} initialState={followerInfo} />
-        )}
       </div>
 
+      {/* User bio */}
       {user.bio && (
-        <>
-          <hr />
+        <div className="rounded-md bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
           <Linkify>
-            <p className="whitespace-pre-line break-words text-muted-foreground">
-              {user.bio}
-            </p>
+            <p className="whitespace-pre-line break-words">{user.bio}</p>
           </Linkify>
-        </>
+        </div>
       )}
     </section>
   );
