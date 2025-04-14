@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import LoadingButton from "@/components/LoadingButton";
 import { PasswordInput } from "@/components/PasswordInput";
 import {
@@ -12,14 +16,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { loginSchema, LoginValues } from "@/lib/validation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
 import { login } from "./actions";
 
 export default function LoginForm() {
   const [error, setError] = useState<string>();
-
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<LoginValues>({
@@ -30,18 +30,21 @@ export default function LoginForm() {
     },
   });
 
-  async function onSubmit(values: LoginValues) {
+  const handleSubmit = (values: LoginValues) => {
     setError(undefined);
     startTransition(async () => {
       const { error } = await login(values);
       if (error) setError(error);
     });
-  }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-        {error && <p className="text-center text-destructive">{error}</p>}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {error && (
+          <p className="text-center text-destructive">{error}</p>
+        )}
+
         <FormField
           control={form.control}
           name="username"
@@ -55,6 +58,7 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="password"
@@ -68,7 +72,12 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
-        <LoadingButton loading={isPending} type="submit" className="w-full">
+
+        <LoadingButton
+          type="submit"
+          loading={isPending}
+          className="w-full"
+        >
           Log in
         </LoadingButton>
       </form>
