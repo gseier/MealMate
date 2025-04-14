@@ -19,6 +19,13 @@ const config = {
       },
     },
     extend: {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['var(--font-open-sans)', 'sans-serif'],
+          },
+        },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
