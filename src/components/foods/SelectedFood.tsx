@@ -36,6 +36,7 @@ const SelectedFood: React.FC<SelectedFoodProps> = ({ selectedFood, onChange, onR
           className="w-20"
           min={0}
         />
+        <span className="text-gray-500">g</span>
         <button
           onClick={() => onRemove(selectedFood)}
           className="p-1 hover:bg-gray-100 rounded"
