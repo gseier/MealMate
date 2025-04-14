@@ -66,21 +66,18 @@ export default function Post({ post }: PostProps) {
 
       {/* Display attached foods */}
       {post.foods && post.foods.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="mt-4 flex flex-wrap gap-2">
           {post.foods.map((foodOnPost) => (
             <span
               key={foodOnPost.food.id}
-              className="px-2 py-1 rounded-full text-sm"
-              style={{
-                backgroundColor: "hsl(var(--accent))",
-                color: "hsl(var(--accent-foreground))",
-              }}
+              className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
             >
               {foodOnPost.food.name} ({foodOnPost.amount}g)
             </span>
           ))}
         </div>
       )}
+
 
       <hr className="border-t border-muted-foreground my-3" />
 

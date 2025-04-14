@@ -3,12 +3,9 @@ import Image from "next/image";
 import { UserData } from "@/lib/types";
 
 interface UserAvatarProps {
-  // Either a full user object...
   user?: UserData;
-  // ...or a direct avatarUrl string may be provided.
   avatarUrl?: string | null;
   size?: number;
-  // Accept a className for additional styling.
   className?: string;
 }
 
@@ -18,7 +15,6 @@ export default function UserAvatar({
   size = 40,
   className = "",
 }: UserAvatarProps) {
-  // Determine the image source:
   const finalAvatarUrl =
     user?.avatarUrl || avatarUrl || avatarPlaceholder.src;
 
@@ -29,7 +25,6 @@ export default function UserAvatar({
       width={size}
       height={size}
       style={{ objectFit: "cover", aspectRatio: 1 }}
-      // Combine a default rounded style with any additional classes passed
       className={`rounded-full ${className}`}
     />
   );
