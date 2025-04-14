@@ -7,13 +7,20 @@ import TrendsSidebar from "@/components/ToFollow";
 export default function Home() {
   return (
     <main className="flex w-full min-w-0 gap-5">
-      <div className="w-full min-w-0 space-y-5">
-        <PostEditor />
-        <Tabs defaultValue="for-you">
-          <TabsList>
-            <TabsTrigger value="for-you">For you</TabsTrigger>
+      {/* Main content area */}
+      <div className="w-full min-w-0 space-y-6">
+        {/* Post creation */}
+        <div className="rounded-2xl bg-card p-5 shadow-sm">
+          <PostEditor />
+        </div>
+
+        {/* Tabbed feed view */}
+        <Tabs defaultValue="for-you" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="for-you">For You</TabsTrigger>
             <TabsTrigger value="following">Following</TabsTrigger>
           </TabsList>
+
           <TabsContent value="for-you">
             <ForYouFeed />
           </TabsContent>
@@ -22,6 +29,8 @@ export default function Home() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Sidebar */}
       <TrendsSidebar />
     </main>
   );

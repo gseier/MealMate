@@ -1,17 +1,19 @@
+import "./globals.css";
+
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-import "./globals.css";
+import { Open_Sans } from "next/font/google";
 import ReactQueryProvider from "./ReactQueryProvider";
-import { Open_Sans } from 'next/font/google';
 
-
+// Font config
 const openSans = Open_Sans({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'], // Include weights as needed
-  variable: '--font-open-sans',
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-open-sans",
 });
 
+// Metadata for SEO and templates
 export const metadata: Metadata = {
   title: {
     template: "%s | mealmate",
@@ -26,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${openSans.variable}`}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${openSans.variable} bg-background font-sans text-foreground`}>
         <ReactQueryProvider>
           <ThemeProvider
             attribute="class"

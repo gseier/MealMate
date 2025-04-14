@@ -1,8 +1,9 @@
+import Link from "next/link";
+import { Home, Utensils } from "lucide-react";
+
 import { validateRequest } from "@/auth";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
-import { Utensils, Home } from "lucide-react";
-import Link from "next/link";
 import NotificationsButton from "./NotificationsButton";
 
 interface MenuBarProps {
@@ -11,34 +12,34 @@ interface MenuBarProps {
 
 export default async function MenuBar({ className }: MenuBarProps) {
   const { user } = await validateRequest();
-
   if (!user) return null;
 
-  const [unreadNotificationsCount] = await Promise.all([
-    prisma.notification.count({
-      where: {
-        recipientId: user.id,
-        read: false,
-      },
-    }),
-  ]);
+  const unreadNotificationsCount = await prisma.notification.count({
+    where: {
+      recipientId: user.id,
+      read: false,
+    },
+  });
 
   return (
-    <div className={className}>
+    <nav className={className}>
+      {/* Home button */}
       <Button
         variant="ghost"
-        className="flex items-center justify-start gap-3"
+        className="w-full justify-start gap-3"
         title="Home"
         asChild
       >
         <Link href="/">
-          <Home />
+          <Home className="size-5" />
           <span className="hidden lg:inline">Home</span>
         </Link>
       </Button>
+
+      {/* Notifications button with unread count */}
       <NotificationsButton
         initialState={{ unreadCount: unreadNotificationsCount }}
       />
-    </div>
+    </nav>
   );
 }
