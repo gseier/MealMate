@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { MoreHorizontal, Trash2 } from "lucide-react";
-
 import { CommentData } from "@/lib/types";
+import { MoreHorizontal, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -26,27 +25,19 @@ export default function CommentMoreButton({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            size="icon"
-            variant="ghost"
-            className={`rounded-full p-1 hover:bg-muted ${className}`}
-            title="More options"
-          >
+          <Button size="icon" variant="ghost" className={className}>
             <MoreHorizontal className="size-5 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-destructive focus:bg-destructive/10"
-          >
-            <Trash2 className="mr-2 size-4" />
-            Delete Comment
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
+            <span className="flex items-center gap-3 text-destructive">
+              <Trash2 className="size-4" />
+              Delete
+            </span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
       <DeleteCommentDialog
         comment={comment}
         open={showDeleteDialog}
