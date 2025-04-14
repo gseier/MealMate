@@ -1,5 +1,10 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import avatarPlaceholder from "@/assets/avatar-placeholder.png";
 import LoadingButton from "@/components/LoadingButton";
+import ProfilePictureSelector from "@/components/ProfilePictureSelector";
 import {
   Dialog,
   DialogContent,
@@ -17,16 +22,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { UserData } from "@/lib/types";
-import ProfilePictureSelector from "@/components/ProfilePictureSelector";
-import {
-  updateUserProfileSchema,
-  UpdateUserProfileValues,
-} from "@/lib/validation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+
+import { updateUserProfileSchema, UpdateUserProfileValues } from "@/lib/validation";
 import { useUpdateProfileMutation } from "./mutations";
+import { UserData } from "@/lib/types";
 
 interface EditProfileDialogProps {
   user: UserData;
@@ -39,7 +38,6 @@ export default function EditProfileDialog({
   open,
   onOpenChange,
 }: EditProfileDialogProps) {
-  // Added avatarUrl to defaultValues so that it's part of the form values.
   const form = useForm<UpdateUserProfileValues>({
     resolver: zodResolver(updateUserProfileSchema),
     defaultValues: {
@@ -51,43 +49,43 @@ export default function EditProfileDialog({
 
   const mutation = useUpdateProfileMutation();
 
-  // State for a cropped avatar if the user uploads and crops one
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
-  // New state to track the selected pre-built avatar URL.
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string>(
     user.avatarUrl || avatarPlaceholder.src
   );
 
-  async function onSubmit(values: UpdateUserProfileValues) {
+  const handleSubmit = (values: UpdateUserProfileValues) => {
     mutation.mutate(
       {
         values: { ...values, avatarUrl: selectedAvatarUrl },
-        // Only pass a File if croppedAvatar exists; otherwise, undefined.
-        avatar: croppedAvatar ? new File([croppedAvatar], `avatar_${user.id}.webp`) : undefined,
+        avatar: croppedAvatar
+          ? new File([croppedAvatar], `avatar_${user.id}.webp`)
+          : undefined,
       },
       {
         onSuccess: () => {
           setCroppedAvatar(null);
           onOpenChange(false);
         },
-      },
+      }
     );
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
+          <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Display name</FormLabel>
+                  <FormLabel>Display Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Your display name" {...field} />
                   </FormControl>
@@ -95,6 +93,7 @@ export default function EditProfileDialog({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="bio"
@@ -112,20 +111,21 @@ export default function EditProfileDialog({
                 </FormItem>
               )}
             />
-            <div className="mb-4">
+
+            <div>
               <FormLabel>Profile Picture</FormLabel>
               <ProfilePictureSelector
                 selected={selectedAvatarUrl}
                 onSelect={(avatar) => {
                   setSelectedAvatarUrl(avatar);
-                  // Clear any cropped image if a pre-built avatar is chosen.
                   setCroppedAvatar(null);
                 }}
               />
             </div>
+
             <DialogFooter>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Save Changes
               </LoadingButton>
             </DialogFooter>
           </form>
