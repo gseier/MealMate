@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
@@ -41,6 +42,7 @@ export default function RootLayout({
           </ThemeProvider>
         </ReactQueryProvider>
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );

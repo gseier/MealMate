@@ -64,7 +64,7 @@ export default async function Page({ params: { username } }: PageProps) {
       <div className="w-full min-w-0 space-y-6">
         <UserProfile user={user} loggedInUserId={loggedInUser.id} />
 
-        <section className="rounded-2xl bg-card p-5 shadow-sm">
+        <section>
           <h2 className="text-center text-2xl font-bold">
             {user.displayName}&apos;s posts
           </h2>
