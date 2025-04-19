@@ -1,11 +1,15 @@
 import "./globals.css";
 
 import { SpeedInsights } from "@vercel/speed-insights/react"
-import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Open_Sans } from "next/font/google";
 import ReactQueryProvider from "./ReactQueryProvider";
+import dynamic from "next/dynamic";
+
+const Toaster = dynamic(() => import("@/components/ui/toaster").then((mod) => mod.Toaster), { ssr: false });
+
+
 
 // Font config
 const openSans = Open_Sans({

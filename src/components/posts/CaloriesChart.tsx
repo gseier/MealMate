@@ -41,7 +41,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export function CaloriesChart({ foods }: CaloriesChartProps) {
+export default function CaloriesChart({ foods }: CaloriesChartProps) {
   // Compute totals by looking up each food's nutritional info in foodsData.
   const totals = React.useMemo(() => {
     let totalFat = 0;

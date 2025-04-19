@@ -12,7 +12,12 @@ import UserAvatar from "../UserAvatar";
 import UserTooltip from "../UserTooltip";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
-import { CaloriesChart } from "./CaloriesChart";
+import dynamic from "next/dynamic";
+
+const CaloriesChart = dynamic(() => import("./CaloriesChart"), {
+  ssr: false,
+  loading: () => <p>Loading chart...</p>,
+});
 
 interface PostProps {
   post: PostData;

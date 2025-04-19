@@ -41,9 +41,12 @@ export default function Page() {
 
         {/* Right: Background Image */}
         <Image
-          src={loginImage}
-          alt="Login illustration"
-          className="hidden w-1/2 object-cover md:block"
+          src="/login-image.jpg"
+          alt="Login"
+          width={600}
+          height={400}
+          priority // 👈 this triggers preload
+          className="rounded-xl"
         />
       </div>
     </main>
