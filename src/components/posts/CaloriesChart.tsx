@@ -12,20 +12,21 @@ import {
 } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
 import foodsData from "@/data/foods.json";
+import { Leaf } from "lucide-react";
 
 export interface PostFoodItem {
   food: {
     id?: number | string;
     name: string;
   };
-  amount: number;
+  amount: number; // grams for this meal
 }
 
 interface CaloriesChartProps {
   foods: PostFoodItem[];
 }
 
-// Custom tooltip that appends "g" after each nutrient value
+// Tooltip that appends "g" after each nutrient value
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -42,33 +43,34 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function CaloriesChart({ foods }: CaloriesChartProps) {
-  // Compute totals by looking up each food's nutritional info in foodsData.
+  // Aggregate totals (fat, protein, carbs, calories, emissions)
   const totals = React.useMemo(() => {
     let totalFat = 0;
     let totalProteins = 0;
     let totalCarbs = 0;
     let totalCalories = 0;
+    let totalEmissions = 0; // kg CO₂e
 
     foods.forEach(({ food, amount }) => {
-      // Look up the full nutritional info for this food by name.
       const foodInfo = foodsData.find(
         (f: any) => f.name.toLowerCase() === food.name.toLowerCase()
       );
-      if (!foodInfo) return; // if not found, skip it.
-      const scale = amount / 100; // convert serving (grams) relative to per 100g values
+      if (!foodInfo) return;
+      const scale = amount / 100; // convert to per‑100 g basis
+
       totalFat += (foodInfo.fat / 10000) * scale;
       totalProteins += (foodInfo.proteins / 10000) * scale;
       totalCarbs += (foodInfo.carbohydrates / 10000) * scale;
-      totalCalories += (foodInfo.calories * 100) * scale;
+      totalCalories += foodInfo.calories * 100 * scale;
+      const emission = "emission" in foodInfo ? foodInfo.emission : 0;
+      totalEmissions += emission * scale; // kg CO₂e
     });
 
-    return { totalFat, totalProteins, totalCarbs, totalCalories };
+    return { totalFat, totalProteins, totalCarbs, totalCalories, totalEmissions };
   }, [foods]);
 
-  // Destructure totals for convenience.
-  const { totalFat, totalProteins, totalCarbs, totalCalories } = totals;
+  const { totalFat, totalProteins, totalCarbs, totalCalories, totalEmissions } = totals;
 
-  // Create chart data for the three segments with distinct colors.
   const chartData = [
     { nutrient: "Fat", value: totalFat, fill: "hsl(10, 70%, 50%)" },
     { nutrient: "Proteins", value: totalProteins, fill: "hsl(120, 70%, 50%)" },
@@ -76,11 +78,18 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
   ];
 
   return (
-    <Card className="flex flex-col">
+    <Card className="relative flex flex-col">
+      {/* Pretty CO₂ tag (top‑right) */}
+      <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700">
+        <Leaf className="h-3 w-3" />
+        {totalEmissions.toFixed(2)} kg&nbsp;CO₂e
+      </div>
+
       <CardHeader className="items-center pb-0">
         <CardTitle>Nutritional Breakdown</CardTitle>
         <CardDescription>Based on added foods</CardDescription>
       </CardHeader>
+
       <CardContent className="flex-1 pb-0">
         <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px]">
           <PieChart>
@@ -127,9 +136,10 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
           </PieChart>
         </ChartContainer>
       </CardContent>
+
       <CardFooter className="flex-col gap-2 text-sm">
         <div className="leading-none text-muted-foreground">
-          Fat, Proteins, and Carbs breakdown
+          Fat, Proteins, Carbs &amp; total meal emissions
         </div>
       </CardFooter>
     </Card>

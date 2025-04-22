@@ -61,7 +61,6 @@ export async function signUp(
       });
     });
 
-    // Use the new session/cookie API:
     const token = generateSessionToken();
     const session = await createSession(token, userId);
     await setSessionTokenCookie(token, session.expiresAt);
