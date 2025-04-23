@@ -57,14 +57,14 @@ export default function PostEditor() {
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-5 rounded-2xl bg-card p-5">
       <div className="flex gap-5 items-start">
         <UserAvatar avatarUrl={user.avatarUrl} className="hidden sm:inline" />
         <div className="w-full">
           <EditorContent
             editor={editor}
             className={cn(
-              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3 mb-4",
+              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-card px-5 py-3 mb-4 text-sm font-sans",
             )}
           />
         </div>

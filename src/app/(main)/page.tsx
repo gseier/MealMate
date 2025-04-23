@@ -10,7 +10,7 @@ export default function Home() {
       {/* Main content area */}
       <div className="w-full min-w-0 space-y-6">
         {/* Post creation */}
-        <div className="rounded-2xl bg-card p-5 shadow-sm">
+        <div className="rounded-2xl bg-card px-5 py-3 mb-4 text-sm font-sans">
           <PostEditor />
         </div>
 
