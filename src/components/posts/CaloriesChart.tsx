@@ -176,7 +176,7 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
               </TooltipTrigger>
               <TooltipContent className="max-w-xs text-xs leading-snug">
                 Grams of fat, protein and carbs for this meal. Emissions come
-                from our public database.
+                from CarbonCloud and their Climatehub Public Database.
               </TooltipContent>
             </UiTooltip>
           </div>
