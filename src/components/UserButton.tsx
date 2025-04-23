@@ -4,7 +4,14 @@ import { logout } from "@/app/(auth)/actions";
 import { useSession } from "@/app/(main)/SessionProvider";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
+import {
+  Check,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  User as UserIcon,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import {
@@ -27,60 +34,84 @@ interface UserButtonProps {
 
 export default function UserButton({ className }: UserButtonProps) {
   const { user } = useSession();
-
   const { theme, setTheme } = useTheme();
-
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className={cn("flex-none rounded-full", className)} data-testid="user-avatar-button">
+        <button
+          className={cn("flex-none rounded-full outline-none", className)}
+          data-testid="user-avatar-button"
+        >
           <UserAvatar avatarUrl={user.avatarUrl} size={40} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Logged in as @{user.username}</DropdownMenuLabel>
+
+      {/* prettier / glassy */}
+      <DropdownMenuContent
+        side="bottom"
+        align="end"
+        className="w-56 rounded-xl border border-white/10 bg-card/70 backdrop-blur-md shadow-xl ring-1 ring-white/10
+                   motion-safe:animate-scale-in"
+      >
+        <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+          Logged in as <span className="font-semibold">@{user.username}</span>
+        </DropdownMenuLabel>
+
         <DropdownMenuSeparator />
-        <Link href={`/users/${user.username}`}>
-          <DropdownMenuItem>
-            <UserIcon className="mr-2 size-4" />
+
+        {/* profile */}
+        <Link href={`/users/${user.username}`} className="focus:outline-none">
+          <DropdownMenuItem className="group">
+            <UserIcon className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100" />
             Profile
           </DropdownMenuItem>
         </Link>
+
+        {/* theme switcher */}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Monitor className="mr-2 size-4" />
+            <Monitor className="mr-2 h-4 w-4 opacity-70" />
             Theme
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
-                <Monitor className="mr-2 size-4" />
-                System default
-                {theme === "system" && <Check className="ms-2 size-4" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                <Sun className="mr-2 size-4" />
-                Light
-                {theme === "light" && <Check className="ms-2 size-4" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                <Moon className="mr-2 size-4" />
-                Dark
-                {theme === "dark" && <Check className="ms-2 size-4" />}
-              </DropdownMenuItem>
+            <DropdownMenuSubContent
+              className="w-44 rounded-xl border border-white/10 bg-card/70 backdrop-blur-md
+                         shadow-md ring-1 ring-white/10 motion-safe:animate-scale-in"
+            >
+              {[
+                { id: "system", label: "System default", icon: Monitor },
+                { id: "light", label: "Light", icon: Sun },
+                { id: "dark", label: "Dark", icon: Moon },
+              ].map(({ id, label, icon: Icon }) => (
+                <DropdownMenuItem
+                  key={id}
+                  onClick={() => setTheme(id)}
+                  className="group"
+                >
+                  <Icon className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100" />
+                  {label}
+                  {theme === id && (
+                    <Check className="ml-auto h-4 w-4 text-primary" />
+                  )}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
+
         <DropdownMenuSeparator />
+
+        {/* logout */}
         <DropdownMenuItem
           onClick={() => {
-            queryClient.clear();
+            qc.clear();
             logout();
           }}
+          className="text-destructive focus:text-destructive group"
         >
-          <LogOutIcon className="mr-2 size-4" />
+          <LogOut className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100" />
           Logout
         </DropdownMenuItem>
       </DropdownMenuContent>

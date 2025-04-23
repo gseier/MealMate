@@ -6,6 +6,8 @@ import { ThemeProvider } from "next-themes";
 import { Open_Sans } from "next/font/google";
 import ReactQueryProvider from "./ReactQueryProvider";
 import dynamic from "next/dynamic";
+import { Urbanist } from "next/font/google";
+const urbanist = Urbanist({ subsets: ["latin"], variable: "--font-urbanist" });
 
 const Toaster = dynamic(() => import("@/components/ui/toaster").then((mod) => mod.Toaster), { ssr: false });
 

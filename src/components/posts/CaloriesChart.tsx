@@ -5,87 +5,78 @@ import { PieChart, Pie, Label, Tooltip } from "recharts";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
 import foodsData from "@/data/foods.json";
-import { Leaf, Sprout, Carrot, Fish } from "lucide-react";
+import {
+  Leaf,
+  Sprout,
+  Carrot,
+  Fish,
+  Info,
+} from "lucide-react";
+import {
+  Tooltip as UiTooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
+/* -------------------------------------------------- */
+/* types                                              */
+/* -------------------------------------------------- */
 export interface PostFoodItem {
-  food: {
-    id?: number | string;
-    name: string;
-  };
+  food: { id?: number | string; name: string };
   amount: number; // grams for this meal
 }
-
 interface CaloriesChartProps {
   foods: PostFoodItem[];
 }
 
-// ----- keyword lists (module scope so they never re‑create) -----
-const landMeatTerms = [
-  "beef",
-  "pork",
-  "chicken",
-  "turkey",
-  "lamb",
-  "mutton",
-  "veal",
-  "bacon",
-  "ham",
-  "sausage",
-];
-const fishTerms = [
-  "fish",
-  "salmon",
-  "tuna",
-  "trout",
-  "cod",
-  "mackerel",
-  "sardine",
-  "herring",
-  "seabass",
-  "squid",
-  "prawn",
-  "shrimp",
-  "lobster",
-  "crab",
-  "anchovy",
-];
-const animalNonMeatTerms = [
-  "milk",
-  "cheese",
-  "butter",
-  "egg",
-  "yogurt",
-  "curd",
-  "cream",
-  "whey",
-];
+/* -------------------------------------------------- */
+/* static term lists                                  */
+/* -------------------------------------------------- */
+const landMeatTerms = ["beef", "pork", "chicken", "turkey", "lamb"];
+const fishTerms = ["fish", "salmon", "tuna", "cod", "shrimp", "prawn"];
+const animalNonMeatTerms = ["milk", "cheese", "butter", "egg", "yogurt"];
 
-// Custom tooltip appends "g" after each nutrient value
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-background p-2 border rounded shadow">
-        {payload.map((entry: any, index: number) => (
-          <div key={`tooltip-${index}`} style={{ color: entry.fill }}>
-            {entry.name}: {Math.round(entry.value)}g
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+/* -------------------------------------------------- */
+/* custom tooltip (recharts)                          */
+/* -------------------------------------------------- */
+const CustomTooltip = ({ active, payload }: any) =>
+  active && payload?.length ? (
+    <div className="rounded border bg-background px-2 py-1 text-xs shadow">
+      {payload.map((e: any) => (
+        <div key={e.name} style={{ color: e.fill }}>
+          {e.name}: {Math.round(e.value)} g
+        </div>
+      ))}
+    </div>
+  ) : null;
 
-// ---------- main component ----------
+/* -------------------------------------------------- */
+/* helper pill                                        */
+/* -------------------------------------------------- */
+const Pill = ({
+  children,
+  colorClass,
+}: {
+  children: React.ReactNode;
+  colorClass: string;
+}) => (
+  <span
+    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colorClass}`}
+  >
+    {children}
+  </span>
+);
+
+/* -------------------------------------------------- */
+/* main component                                     */
+/* -------------------------------------------------- */
 export default function CaloriesChart({ foods }: CaloriesChartProps) {
-  // Aggregate totals and inspect ingredients only once
+  /* ------------ compute totals only once --------- */
   const {
     totalFat,
     totalProteins,
@@ -94,46 +85,39 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     totalEmissions,
     dietTag,
   } = React.useMemo(() => {
-    let totalFat = 0;
-    let totalProteins = 0;
-    let totalCarbs = 0;
-    let totalCalories = 0;
-    let totalEmissions = 0; // kg CO₂e
+    let totalFat = 0,
+      totalProteins = 0,
+      totalCarbs = 0,
+      totalCalories = 0,
+      totalEmissions = 0;
 
-    let hasLandMeat = false;
-    let hasFish = false;
-    let hasAnimalProduct = false;
+    let hasLandMeat = false,
+      hasFish = false,
+      hasAnimalProduct = false;
 
     foods.forEach(({ food, amount }) => {
-      const foodInfo = foodsData.find(
-        (f: any) => f.name.toLowerCase() === food.name.toLowerCase()
+      const f = foodsData.find(
+        (d: any) => d.name.toLowerCase() === food.name.toLowerCase(),
       );
-      if (!foodInfo) return;
+      if (!f) return;
       const scale = amount / 100;
 
-      // nutrients totals
-      totalFat += (foodInfo.fat / 10000) * scale;
-      totalProteins += (foodInfo.proteins / 10000) * scale;
-      totalCarbs += (foodInfo.carbohydrates / 10000) * scale;
-      totalCalories += foodInfo.calories * 100 * scale;
-      totalEmissions += (foodInfo.emission ?? 0) * scale;
+      totalFat += (f.fat / 10000) * scale;
+      totalProteins += (f.proteins / 10000) * scale;
+      totalCarbs += (f.carbohydrates / 10000) * scale;
+      totalCalories += f.calories * 100 * scale;
+      totalEmissions += (f.emission ?? 0) * scale;
 
-      // diet tagging logic (name matching is enough for demo)
-      const lname = foodInfo.name.toLowerCase();
-      if (landMeatTerms.some((t) => lname.includes(t))) hasLandMeat = true;
-      if (fishTerms.some((t) => lname.includes(t))) hasFish = true;
-      if (animalNonMeatTerms.some((t) => lname.includes(t))) hasAnimalProduct = true;
+      const n = f.name.toLowerCase();
+      if (landMeatTerms.some((t) => n.includes(t))) hasLandMeat = true;
+      if (fishTerms.some((t) => n.includes(t))) hasFish = true;
+      if (animalNonMeatTerms.some((t) => n.includes(t)))
+        hasAnimalProduct = true;
     });
 
     let tag: "vegan" | "vegetarian" | "pescatarian" | null = null;
     if (!hasLandMeat) {
-      if (hasFish) {
-        tag = "pescatarian";
-      } else if (!hasAnimalProduct) {
-        tag = "vegan";
-      } else {
-        tag = "vegetarian";
-      }
+      tag = hasFish ? "pescatarian" : !hasAnimalProduct ? "vegan" : "vegetarian";
     }
 
     return {
@@ -146,109 +130,116 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     };
   }, [foods]);
 
+  /* ------------ chart data ----------------------- */
   const chartData = [
-    { nutrient: "Fat", value: totalFat, fill: "hsl(10, 70%, 50%)" },
-    { nutrient: "Proteins", value: totalProteins, fill: "hsl(120, 70%, 50%)" },
-    { nutrient: "Carbs", value: totalCarbs, fill: "hsl(220, 70%, 50%)" },
+    { nutrient: "Fat", value: totalFat, fill: "hsl(10 80% 55%)" },
+    { nutrient: "Proteins", value: totalProteins, fill: "hsl(140 70% 45%)" },
+    { nutrient: "Carbs", value: totalCarbs, fill: "hsl(220 70% 50%)" },
   ];
 
-  // Render diet badge if any
-  const renderDietBadge = () => {
+  /* ------------ diet pill ------------------------ */
+  const DietPill = () => {
     if (!dietTag) return null;
+    const props =
+      dietTag === "vegan"
+        ? { Icon: Sprout, cls: "bg-green-600/15 text-green-700", label: "Vegan" }
+        : dietTag === "vegetarian"
+        ? {
+            Icon: Carrot,
+            cls: "bg-lime-600/15 text-lime-700",
+            label: "Vegetarian",
+          }
+        : {
+            Icon: Fish,
+            cls: "bg-sky-600/15 text-sky-700",
+            label: "Pescatarian",
+          };
 
-    const commonClass =
-      "flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium";
-
-    switch (dietTag) {
-      case "vegan":
-        return (
-          <div className={`${commonClass} text-green-700 bg-green-600/10`}>
-            <Sprout className="h-3 w-3" /> Vegan
-          </div>
-        );
-      case "vegetarian":
-        return (
-          <div className={`${commonClass} text-lime-700 bg-lime-600/10`}>
-            <Carrot className="h-3 w-3" /> Vegetarian
-          </div>
-        );
-      case "pescatarian":
-        return (
-          <div className={`${commonClass} text-sky-700 bg-sky-600/10`}>
-            <Fish className="h-3 w-3" /> Pescatarian
-          </div>
-        );
-    }
+    return (
+      <Pill colorClass={props.cls}>
+        <props.Icon className="h-3 w-3" /> {props.label}
+      </Pill>
+    );
   };
 
+  /* ------------ render --------------------------- */
   return (
-    <Card className="relative flex flex-col">
-      {/* badge stack */}
-      <div className="absolute right-3 top-3 flex flex-col items-end gap-1">
-        {/* emission badge always shown */}
-        <div className="flex items-center gap-1 rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700">
-          <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg&nbsp;CO₂e
-        </div>
-        {renderDietBadge()}
-      </div>
+    <TooltipProvider delayDuration={120}>
+      <Card>
+        {/* header row */}
+        <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+          <div className="flex items-center gap-1 text-sm font-medium">
+            Nutritional&nbsp;breakdown
+            <UiTooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs leading-snug">
+                Grams of fat, protein and carbs for this meal. Emissions come
+                from our public database.
+              </TooltipContent>
+            </UiTooltip>
+          </div>
 
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Nutritional Breakdown</CardTitle>
-        <CardDescription>Based on added foods</CardDescription>
-      </CardHeader>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Pill colorClass="bg-emerald-600/15 text-emerald-700">
+              <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg&nbsp;
+              CO₂e
+            </Pill>
+            <DietPill />
+          </div>
+        </CardHeader>
 
-      <CardContent className="flex-1 pb-0">
-        <ChartContainer config={{}} className="mx-auto aspect-square max-h-[250px]">
-          <PieChart>
-            <Tooltip content={<CustomTooltip />} cursor={false} />
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="nutrient"
-              innerRadius={60}
-              strokeWidth={5}
-              isAnimationActive={false}
-            >
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+        {/* chart */}
+        <CardContent className="pb-4">
+          <ChartContainer
+            config={{}}
+            className="mx-auto aspect-square max-h-[240px]"
+          >
+            <PieChart>
+              <Tooltip content={<CustomTooltip />} cursor={false} />
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="nutrient"
+                innerRadius={60}
+                strokeWidth={5}
+                isAnimationActive={false}
+              >
+                <Label
+                  /* TS fix: viewBox is `any`; cast it so cx / cy are accepted */
+                  content={({ viewBox }) => {
+                    const { cx, cy } = viewBox as { cx: number; cy: number };
+                    if (cx == null || cy == null) return null;
                     return (
                       <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
+                        x={cx}
+                        y={cy}
                         textAnchor="middle"
                         dominantBaseline="middle"
                       >
                         <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
+                          x={cx}
                           className="fill-foreground text-3xl font-bold"
                         >
                           {Math.round(totalCalories)}
                         </tspan>
                         <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
+                          x={cx}
+                          y={cy + 22}
+                          className="fill-muted-foreground text-xs"
                         >
-                          Calories
+                          kcal
                         </tspan>
                       </text>
                     );
-                  }
-                  return null;
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-      </CardContent>
-
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="leading-none text-muted-foreground">
-          Fat, Proteins, Carbs &amp; total meal emissions
-        </div>
-      </CardFooter>
-    </Card>
+                  }}
+                />
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 }
