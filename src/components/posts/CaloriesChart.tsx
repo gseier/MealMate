@@ -12,7 +12,43 @@ import {
 } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
 import foodsData from "@/data/foods.json";
-import { Leaf } from "lucide-react";
+import { Leaf, Carrot, Sprout } from "lucide-react";
+
+// --- constant term lists must be module‑scoped so they don't trigger the
+// eslint‑plugin‑react‑hooks exhaustive‑deps rule inside hooks.
+const meatTerms = [
+  "beef",
+  "pork",
+  "chicken",
+  "turkey",
+  "lamb",
+  "goat",
+  "veal",
+  "duck",
+  "fish",
+  "tuna",
+  "salmon",
+  "mackerel",
+  "trout",
+  "cod",
+  "seabass",
+  "squid",
+  "shrimp",
+  "prawn",
+  "crab",
+  "lobster",
+  "liver",
+];
+
+const animalNonMeatTerms = [
+  "milk",
+  "cheese",
+  "butter",
+  "yogurt",
+  "egg",
+  "honey",
+  "curd",
+];
 
 export interface PostFoodItem {
   food: {
@@ -43,33 +79,64 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function CaloriesChart({ foods }: CaloriesChartProps) {
-  // Aggregate totals (fat, protein, carbs, calories, emissions)
-  const totals = React.useMemo(() => {
+  // Aggregate nutritional totals *and* determine diet badges
+  const {
+    totalFat,
+    totalProteins,
+    totalCarbs,
+    totalCalories,
+    totalEmissions,
+    isVegetarian,
+    isVegan,
+  } = React.useMemo(() => {
     let totalFat = 0;
     let totalProteins = 0;
     let totalCarbs = 0;
     let totalCalories = 0;
-    let totalEmissions = 0; // kg CO₂e
+    let totalEmissions = 0;
+
+    let hasMeat = false;
+    let hasAnimalProduct = false;
 
     foods.forEach(({ food, amount }) => {
       const foodInfo = foodsData.find(
         (f: any) => f.name.toLowerCase() === food.name.toLowerCase()
       );
       if (!foodInfo) return;
-      const scale = amount / 100; // convert to per‑100 g basis
+
+      const scale = amount / 100; // per‑100g basis
 
       totalFat += (foodInfo.fat / 10000) * scale;
       totalProteins += (foodInfo.proteins / 10000) * scale;
       totalCarbs += (foodInfo.carbohydrates / 10000) * scale;
       totalCalories += foodInfo.calories * 100 * scale;
-      const emission = "emission" in foodInfo ? foodInfo.emission : 0;
-      totalEmissions += emission * scale; // kg CO₂e
+      totalEmissions += (foodInfo.emission ?? 0) * scale;
+
+      const lname = foodInfo.name.toLowerCase();
+      if (meatTerms.some((term) => lname.includes(term))) {
+        hasMeat = true;
+      }
+      if (
+        animalNonMeatTerms.some((term) => lname.includes(term)) ||
+        lname.includes("cheese")
+      ) {
+        hasAnimalProduct = true;
+      }
     });
 
-    return { totalFat, totalProteins, totalCarbs, totalCalories, totalEmissions };
-  }, [foods]);
+    const isVegan = !hasMeat && !hasAnimalProduct;
+    const isVegetarian = !hasMeat && !isVegan; // veggie if no meat but some animal product
 
-  const { totalFat, totalProteins, totalCarbs, totalCalories, totalEmissions } = totals;
+    return {
+      totalFat,
+      totalProteins,
+      totalCarbs,
+      totalCalories,
+      totalEmissions,
+      isVegetarian,
+      isVegan,
+    };
+  }, [foods]);
 
   const chartData = [
     { nutrient: "Fat", value: totalFat, fill: "hsl(10, 70%, 50%)" },
@@ -79,10 +146,21 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
 
   return (
     <Card className="relative flex flex-col">
-      {/* Pretty CO₂ tag (top‑right) */}
-      <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700">
-        <Leaf className="h-3 w-3" />
-        {totalEmissions.toFixed(2)} kg&nbsp;CO₂e
+      {/* Diet & emission badges */}
+      <div className="absolute right-3 top-3 flex gap-1">
+        {isVegan && (
+          <span className="flex items-center gap-1 rounded-full bg-green-600/10 px-2 py-0.5 text-xs font-medium text-green-700">
+            <Sprout className="h-3 w-3" /> Vegan
+          </span>
+        )}
+        {!isVegan && isVegetarian && (
+          <span className="flex items-center gap-1 rounded-full bg-lime-600/10 px-2 py-0.5 text-xs font-medium text-lime-700">
+            <Carrot className="h-3 w-3" /> Vegetarian
+          </span>
+        )}
+        <span className="flex items-center gap-1 rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700">
+          <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg CO₂e
+        </span>
       </div>
 
       <CardHeader className="items-center pb-0">
