@@ -60,7 +60,7 @@ export default function PostEditor() {
     <div className="flex flex-col gap-5 rounded-2xl bg-card p-5">
       <div className="flex gap-5 items-start">
         <UserAvatar avatarUrl={user.avatarUrl} className="hidden sm:inline" />
-        <div className="w-full">
+        <div className="flex-1 min-w-0">
           <EditorContent
             editor={editor}
             className={cn(
