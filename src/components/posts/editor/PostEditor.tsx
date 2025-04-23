@@ -64,7 +64,7 @@ export default function PostEditor() {
           <EditorContent
             editor={editor}
             className={cn(
-              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-card px-5 py-3 mb-4 text-sm font-sans",
+              "tiptap max-h-[20rem] w-full overflow-y-auto rounded-md mb-4",
             )}
           />
         </div>

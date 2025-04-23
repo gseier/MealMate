@@ -6,6 +6,13 @@
   pointer-events: none;
 }
 
+/* existing placeholder rule … */
+
 .tiptap.ProseMirror {
-  outline: none;
+  /* --- Shared input look & feel --- */
+  @apply rounded-md border border-input bg-background px-4 py-2 font-sans text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+
+  /* --- Keep text inside the box --- */
+  @apply break-words; /* wrap really long tokens        */
+  max-width: 100%; /* never overflow horizontally     */
 }
