@@ -130,18 +130,22 @@ const divideMap: Record<string, number> = {
   Zinc: 10,
   /*   others   */
   Choline: 10,
-  Methionine: 10, // → mg
-  Tryptophan: 10, // → mg
-  "Vitamin A": 10, // → mg
+  Methionine: 10, // mg
+  Tryptophan: 10, // mg
+  Histidine: 10,  // mg
+  "Vitamin A": 10, // mg
   "Vitamin B3": 10,
   "Vitamin B5": 10,
   "Vitamin B6": 10,
   "Vitamin C": 10,
   Isoleucine: 10000,
   Leucine: 10000,
+  Lysine: 10000,
   Phenylalanine: 10000,
   Threonine: 10000,
   Valine: 10000,
+  "Linoleic acid": 10,
+  "α-Linolenic acid": 10,
 };
 
 /* -------------------------------------------------- */
@@ -232,7 +236,8 @@ function getUnit(nutrient: string): string {
   if (["Fat", "Proteins", "Carbs"].includes(nutrient)) return "g";
 
   // special cases
-  if (nutrient === "Methionine" || nutrient === "Tryptophan") return "mg";
+  if (["Methionine", "Tryptophan", "Histidine"].includes(nutrient))
+    return "mg";
 
   if (essentialAminoSet.has(nutrient)) return "g";
   if (essentialFattySet.has(nutrient)) return "mg";
@@ -245,36 +250,23 @@ function getUnit(nutrient: string): string {
         "Vitamin B3",
         "Vitamin B5",
         "Vitamin B6",
+        "Vitamin A",
       ].includes(nutrient)
     )
       return "mg";
-    if (nutrient === "Vitamin A") return "mg";
     return "µg";
   }
 
   if (["Chromium", "Iodine", "Molybdenum", "Selenium"].includes(nutrient))
     return "µg";
 
-  // default
-  return "mg";
+  return "mg"; // default
 }
 
 /* -------------------------------------------------- */
 /* main component                                     */
 /* -------------------------------------------------- */
 export default function CaloriesChart({ foods }: CaloriesChartProps) {
-  /* --- persistent dialog open state -------------- */
-  const [open, setOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    // restore
-    if (sessionStorage.getItem("mm_nutrition_open") === "1") setOpen(true);
-  }, []);
-  React.useEffect(() => {
-    // persist
-    sessionStorage.setItem("mm_nutrition_open", open ? "1" : "0");
-  }, [open]);
-
   /* --- macro totals ------------------------------ */
   const {
     totalFat,
@@ -381,8 +373,8 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
                 <Info className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs text-xs leading-snug">
-                Grams of fat, protein and carbs for this meal.  
-                Micronutrients are aggregated from the selected foods.  
+                Grams of fat, protein and carbs for this meal.
+                Micronutrients are aggregated from the selected foods.
                 Emissions data via CarbonCloud.
               </TooltipContent>
             </UiTooltip>
@@ -445,7 +437,7 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
         </CardContent>
 
         {/* ---------- floating dialog trigger ---------- */}
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog>
           <DialogTrigger asChild>
             <Button
               variant="secondary"
@@ -461,7 +453,7 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
             <DialogHeaderUi>
               <DialogTitle>Nutrition facts</DialogTitle>
               <DialogDescription className="text-xs">
-                Per&nbsp;100 g and totals for this meal
+                Per 100 g and totals for this meal
               </DialogDescription>
             </DialogHeaderUi>
 
