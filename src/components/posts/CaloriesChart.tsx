@@ -373,7 +373,13 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
             Nutritional breakdown
             <UiTooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                <button
+                  type="button"
+                  aria-label="Nutritional breakdown info"
+                  className="rounded p-0 focus:outline-none focus:ring-2 focus:ring-primary/60"
+                >
+                  <Info className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
+                </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs text-xs leading-snug">
                 Grams of fat, protein and carbs for this meal.
