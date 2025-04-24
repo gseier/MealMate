@@ -9,7 +9,6 @@ import SearchField from "@/components/SearchField";
 import UserButton from "@/components/UserButton";
 
 export default function Navbar() {
-  /* shadow on scroll */
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -33,7 +32,6 @@ export default function Navbar() {
           md:max-w-7xl
         "
       >
-        {/* ─── Logo ───────────────────────────────── */}
         <Link href="/" className="flex shrink-0 items-center gap-2 sm:gap-3">
           <motion.span
             whileHover={{ rotate: 180 }}
@@ -43,8 +41,6 @@ export default function Navbar() {
           >
             <UtensilsCrossed className="h-6 w-6 xs:h-7 xs:w-7" />
           </motion.span>
-
-          {/* hide text on ultra-narrow screens (<360 px) */}
           <motion.span
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -62,15 +58,10 @@ export default function Navbar() {
             MealMate
           </motion.span>
         </Link>
-
-        {/* ─── Search (always visible) ─────────────── */}
-        {/* min-w-0 lets it shrink instead of forcing overflow */}
         <div className="mx-2 flex-1 min-w-0 max-w-md">
           <SearchField />
         </div>
-
-        {/* ─── User button ─────────────────────────── */}
-        <UserButton className="shrink-0" />
+        <UserButton className="shrink-0 md:ml-auto" />
       </div>
     </header>
   );

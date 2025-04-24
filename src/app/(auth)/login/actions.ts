@@ -37,7 +37,6 @@ export async function login(
       return { error: "Incorrect username or password" };
     }
 
-    // Generate a session token, create the session, and set the session cookie
     const token = generateSessionToken();
     const session = await createSession(token, existingUser.id);
     await setSessionTokenCookie(token, session.expiresAt);
