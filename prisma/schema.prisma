@@ -75,7 +75,7 @@ model Food {
 model FoodOnPost {
   postId   String
   foodId   Int
-  amount   Int       // <-- add this field to store the grams for each post
+  amount   Int
   post     Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
   food     Food  @relation(fields: [foodId], references: [id])
   @@id([postId, foodId])

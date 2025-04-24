@@ -15,6 +15,7 @@ import {
   Carrot,
   Fish,
   Info,
+  ListOrdered,
 } from "lucide-react";
 import {
   Tooltip as UiTooltip,
@@ -22,6 +23,15 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader as DialogHeaderUi,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 /* -------------------------------------------------- */
 /* types                                              */
@@ -42,7 +52,7 @@ const fishTerms = ["fish", "salmon", "tuna", "cod", "shrimp", "prawn"];
 const animalNonMeatTerms = ["milk", "cheese", "butter", "egg", "yogurt"];
 
 /* -------------------------------------------------- */
-/* custom tooltip (recharts)                          */
+/* helper components                                  */
 /* -------------------------------------------------- */
 const CustomTooltip = ({ active, payload }: any) =>
   active && payload?.length ? (
@@ -55,9 +65,6 @@ const CustomTooltip = ({ active, payload }: any) =>
     </div>
   ) : null;
 
-/* -------------------------------------------------- */
-/* helper pill                                        */
-/* -------------------------------------------------- */
 const Pill = ({
   children,
   colorClass,
@@ -71,6 +78,46 @@ const Pill = ({
     {children}
   </span>
 );
+
+/* -------------------------------------------------- */
+/* nutrition utils                                    */
+/* -------------------------------------------------- */
+interface NutrientTotals {
+  [key: string]: number;
+}
+
+function aggregateNutrients(foods: PostFoodItem[]) {
+  let totals: NutrientTotals = {};
+  let totalWeight = 0;
+
+  foods.forEach(({ food, amount }) => {
+    const f = foodsData.find(
+      (d: any) => d.name.toLowerCase() === food.name.toLowerCase(),
+    );
+    if (!f) return;
+    totalWeight += amount;
+    const scale = amount / 100; // foods.json nutrients are per 100 g
+
+    // macros (already mg → convert first)
+    totals["Fat"] = (totals["Fat"] ?? 0) + f.fat / 10000 * scale; // g
+    totals["Proteins"] = (totals["Proteins"] ?? 0) + f.proteins / 10000 * scale; // g
+    totals["Carbs"] = (totals["Carbs"] ?? 0) + f.carbohydrates / 10000 * scale; // g
+    totals["Calories"] = (totals["Calories"] ?? 0) + f.calories * 100 * scale; // kcal
+
+    // micronutrients
+    Object.entries(f.nutrients ?? {}).forEach(([k, v]) => {
+      totals[k] = (totals[k] ?? 0) + v * scale;
+    });
+  });
+
+  const per100Factor = totalWeight ? 100 / totalWeight : 0;
+  const per100g: NutrientTotals = {};
+  Object.entries(totals).forEach(([k, v]) => {
+    per100g[k] = v * per100Factor;
+  });
+
+  return { totals, per100g, totalWeight };
+}
 
 /* -------------------------------------------------- */
 /* main component                                     */
@@ -111,8 +158,7 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
       const n = f.name.toLowerCase();
       if (landMeatTerms.some((t) => n.includes(t))) hasLandMeat = true;
       if (fishTerms.some((t) => n.includes(t))) hasFish = true;
-      if (animalNonMeatTerms.some((t) => n.includes(t)))
-        hasAnimalProduct = true;
+      if (animalNonMeatTerms.some((t) => n.includes(t))) hasAnimalProduct = true;
     });
 
     let tag: "vegan" | "vegetarian" | "pescatarian" | null = null;
@@ -129,6 +175,11 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
       dietTag: tag,
     };
   }, [foods]);
+
+  const { totals: nutrientTotals, per100g: nutrientPer100g } = React.useMemo(
+    () => aggregateNutrients(foods),
+    [foods],
+  );
 
   /* ------------ chart data ----------------------- */
   const chartData = [
@@ -162,6 +213,41 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     );
   };
 
+  /* ------------ nutrition label component -------- */
+  const NutritionLabel = () => {
+    const macroOrder = ["Calories", "Fat", "Proteins", "Carbs"];
+    const micronutrients = Object.keys(nutrientTotals).filter(
+      (k) => !macroOrder.includes(k),
+    );
+    micronutrients.sort();
+
+    const renderRow = (name: string) => (
+      <div key={name} className="grid grid-cols-3 border-b last:border-none">
+        <span className="col-span-2 py-1 text-sm font-medium text-gray-800">
+          {name}
+        </span>
+        <span className="py-1 text-right text-sm tabular-nums text-gray-800">
+          {nutrientPer100g[name]?.toFixed(1)} / {nutrientTotals[name]?.toFixed(1)}
+        </span>
+      </div>
+    );
+
+    return (
+      <div className="w-full rounded-md border-2 border-gray-800 bg-white p-4 shadow-lg">
+        <h3 className="mb-2 text-center text-lg font-extrabold tracking-wide text-gray-900">
+          Nutrition Facts
+        </h3>
+        <div className="mb-2 text-xs text-gray-600">per 100 g / total</div>
+        <div className="border-t-4 border-gray-800" />
+        {/* macro rows */}
+        {macroOrder.map(renderRow)}
+        <div className="my-1 border-t-4 border-gray-800" />
+        {/* micronutrients */}
+        {micronutrients.map(renderRow)}
+      </div>
+    );
+  };
+
   /* ------------ render --------------------------- */
   return (
     <TooltipProvider delayDuration={120}>
@@ -181,7 +267,29 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
             </UiTooltip>
           </div>
 
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Nutrition label button */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-1 border border-gray-300 bg-white/70 backdrop-blur hover:bg-white"
+                >
+                  <ListOrdered className="h-4 w-4" /> Nutrition&nbsp;label
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeaderUi>
+                  <DialogTitle className="sr-only">Nutrition label</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Detailed nutritional information
+                  </DialogDescription>
+                </DialogHeaderUi>
+                <NutritionLabel />
+              </DialogContent>
+            </Dialog>
+
             <Pill colorClass="bg-emerald-600/15 text-emerald-700">
               <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg&nbsp;
               CO₂e
@@ -207,7 +315,6 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
                 isAnimationActive={false}
               >
                 <Label
-                  /* TS fix: viewBox is `any`; cast it so cx / cy are accepted */
                   content={({ viewBox }) => {
                     const { cx, cy } = viewBox as { cx: number; cy: number };
                     if (cx == null || cy == null) return null;
