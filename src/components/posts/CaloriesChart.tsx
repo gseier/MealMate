@@ -106,11 +106,13 @@ const essentialFattySet = new Set(["α-Linolenic acid", "Linoleic acid"]);
 /* -------------------------------------------------- */
 const multiplyMap: Record<string, number> = {
   "Vitamin B1": 100,
-  "Vitamin B2": 10,
   "Vitamin B7": 100,
   "Vitamin B9": 100,
   "Vitamin B12": 100,
   "Vitamin E": 100,
+  "Vitamin K": 100,
+  Manganese: 100,
+  Selenium: 10,
 };
 
 const divideMap: Record<string, number> = {
@@ -121,11 +123,9 @@ const divideMap: Record<string, number> = {
   Copper: 10,
   Iron: 10,
   Magnesium: 10,
-  Manganese: 10,
   Molybdenum: 10,
   Phosphorus: 10,
   Potassium: 10,
-  Selenium: 10,
   Sodium: 10,
   Zinc: 10,
   /*   others   */
@@ -134,6 +134,7 @@ const divideMap: Record<string, number> = {
   Tryptophan: 10, // mg
   Histidine: 10,  // mg
   "Vitamin A": 10, // mg
+  "Vitamin B2": 10,
   "Vitamin B3": 10,
   "Vitamin B5": 10,
   "Vitamin B6": 10,
@@ -248,16 +249,18 @@ function getUnit(nutrient: string): string {
         "Vitamin C",
         "Vitamin E",
         "Vitamin B3",
+        "Vitamin B2",
         "Vitamin B5",
         "Vitamin B6",
         "Vitamin A",
+        "Choline",
       ].includes(nutrient)
     )
       return "mg";
     return "µg";
   }
 
-  if (["Chromium", "Iodine", "Molybdenum", "Selenium"].includes(nutrient))
+  if (["Chromium", "Iodine", "Molybdenum", "Selenium", "Manganese"].includes(nutrient))
     return "µg";
 
   return "mg"; // default
