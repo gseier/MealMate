@@ -111,6 +111,7 @@ const multiplyMap: Record<string, number> = {
   "Vitamin B12": 100,
   "Vitamin E": 100,
   "Vitamin K": 100,
+  Iodine: 100,
   Manganese: 100,
   Selenium: 10,
 };
@@ -247,7 +248,6 @@ function getUnit(nutrient: string): string {
     if (
       [
         "Vitamin C",
-        "Vitamin E",
         "Vitamin B3",
         "Vitamin B2",
         "Vitamin B5",
