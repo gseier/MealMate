@@ -32,6 +32,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import clsx from "clsx";
 
 /* -------------------------------------------------- */
 /* types                                              */
@@ -50,6 +51,55 @@ interface CaloriesChartProps {
 const landMeatTerms = ["beef", "pork", "chicken", "turkey", "lamb"];
 const fishTerms = ["fish", "salmon", "tuna", "cod", "shrimp", "prawn"];
 const animalNonMeatTerms = ["milk", "cheese", "butter", "egg", "yogurt"];
+
+/* nutrient categories & helpers -------------------- */
+const vitaminSet = new Set([
+  "Vitamin A",
+  "Vitamin B1",
+  "Vitamin B2",
+  "Vitamin B3",
+  "Vitamin B5",
+  "Vitamin B6",
+  "Vitamin B7",
+  "Vitamin B9",
+  "Vitamin B12",
+  "Vitamin C",
+  "Vitamin D",
+  "Vitamin E",
+  "Vitamin K",
+  "Choline",
+]);
+
+const mineralSet = new Set([
+  "Calcium",
+  "Chloride",
+  "Chromium",
+  "Copper",
+  "Iodine",
+  "Iron",
+  "Magnesium",
+  "Manganese",
+  "Molybdenum",
+  "Phosphorus",
+  "Potassium",
+  "Selenium",
+  "Sodium",
+  "Zinc",
+]);
+
+const essentialAminoSet = new Set([
+  "Histidine",
+  "Isoleucine",
+  "Leucine",
+  "Lysine",
+  "Methionine",
+  "Phenylalanine",
+  "Threonine",
+  "Tryptophan",
+  "Valine",
+]);
+
+const essentialFattySet = new Set(["α-Linolenic acid", "Linoleic acid"]);
 
 /* -------------------------------------------------- */
 /* helper components                                  */
@@ -73,7 +123,10 @@ const Pill = ({
   colorClass: string;
 }) => (
   <span
-    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colorClass}`}
+    className={clsx(
+      "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+      colorClass,
+    )}
   >
     {children}
   </span>
@@ -106,7 +159,12 @@ function aggregateNutrients(foods: PostFoodItem[]) {
 
     // micronutrients
     Object.entries(f.nutrients ?? {}).forEach(([k, v]) => {
-      totals[k] = (totals[k] ?? 0) + v * scale;
+      let val = v;
+      // fix minerals scale (data 10×)
+      if (mineralSet.has(k) && !["Sodium"].includes(k)) {
+        val = v / 10;
+      }
+      totals[k] = (totals[k] ?? 0) + val * scale;
     });
   });
 
@@ -122,8 +180,17 @@ function aggregateNutrients(foods: PostFoodItem[]) {
 function getUnit(nutrient: string): string {
   if (nutrient === "Calories") return "kcal";
   if (["Fat", "Proteins", "Carbs"].includes(nutrient)) return "g";
-  if (/vitamin/i.test(nutrient)) return "µg";
-  return "mg"; // minerals + amino acids default
+  if (vitaminSet.has(nutrient)) {
+    // B1 etc often mg/µg, choose µg default
+    if (["Vitamin C", "Choline"].includes(nutrient)) return "mg";
+    return "µg";
+  }
+  if (essentialAminoSet.has(nutrient)) return nutrient === "Histidine" ? "mg" : "g";
+  if (essentialFattySet.has(nutrient)) return "mg";
+  // minerals default mg, some µg list
+  if (["Chromium", "Iodine", "Molybdenum", "Selenium"].includes(nutrient))
+    return "µg";
+  return "mg";
 }
 
 /* -------------------------------------------------- */
@@ -188,6 +255,14 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     [foods],
   );
 
+  /* ---------- prepare nutrient groups ------------ */
+  const groupOrder: { title: string; set: Set<string> }[] = [
+    { title: "Vitamins", set: vitaminSet },
+    { title: "Minerals", set: mineralSet },
+    { title: "Essential Amino Acids", set: essentialAminoSet },
+    { title: "Essential Fatty Acids", set: essentialFattySet },
+  ];
+
   /* ------------ chart data ----------------------- */
   const chartData = [
     { nutrient: "Fat", value: totalFat, fill: "hsl(10 80% 55%)" },
@@ -222,18 +297,12 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
 
   /* ------------ nutrition label component -------- */
   const NutritionLabel = () => {
-    const macroOrder = ["Calories", "Fat", "Proteins", "Carbs"];
-    const micronutrients = Object.keys(nutrientTotals).filter(
-      (k) => !macroOrder.includes(k),
-    );
-    micronutrients.sort();
-
     const renderRow = (name: string) => (
       <div
         key={name}
-        className="grid grid-cols-4 border-b last:border-none py-1 text-sm text-gray-800"
+        className="grid grid-cols-4 border-b last:border-none py-0.5 text-sm text-gray-800"
       >
-        <span className="col-span-2 font-medium">{name}</span>
+        <span className="col-span-2 truncate pr-2 font-medium">{name}</span>
         <span className="text-right tabular-nums">
           {nutrientPer100g[name]?.toFixed(1)} {getUnit(name)}
         </span>
@@ -244,20 +313,25 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     );
 
     return (
-      <div className="w-full rounded-md border-2 border-gray-800 bg-white p-4 shadow-lg">
+      <div className="max-h-[70vh] w-full overflow-y-auto rounded-md border-2 border-gray-800 bg-white p-4 shadow-lg">
         <h3 className="mb-2 text-center text-lg font-extrabold tracking-wide text-gray-900">
           Nutrition Facts
         </h3>
-        <div className="grid grid-cols-4 border-b-4 border-gray-800 pb-1 text-xs font-medium uppercase tracking-wide text-gray-600">
+        <div className="grid grid-cols-4 border-b-4 border-gray-800 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
           <span className="col-span-2" />
           <span className="text-right">per 100 g</span>
           <span className="text-right">total</span>
         </div>
-        {/* macro rows */}
-        {macroOrder.map(renderRow)}
-        <div className="my-1 border-t-4 border-gray-800" />
-        {/* micronutrients */}
-        {micronutrients.map(renderRow)}
+        {groupOrder.map(({ title, set }) => {
+          const names = Array.from(set).filter((n) => nutrientTotals[n] != null);
+          if (!names.length) return null;
+          return (
+            <div key={title} className="mt-3 first:mt-2">
+              <h4 className="mb-1 text-sm font-semibold text-gray-700">{title}</h4>
+              {names.sort().map(renderRow)}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -292,18 +366,18 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
 
         {/* chart */}
         <CardContent className="relative pb-6 pt-2">
-          {/* floating nutrition button */}
+          {/* nutrition button inside border */}
           <Dialog>
             <DialogTrigger asChild>
               <Button
                 variant="secondary"
                 size="icon"
-                className="absolute -left-3 bottom-3 z-10 h-8 w-8 border border-gray-300 bg-white/70 backdrop-blur hover:bg-white"
+                className="absolute left-2 bottom-2 z-10 h-8 w-8 border border-gray-300 bg-white/70 backdrop-blur hover:bg-white"
               >
                 <ListOrdered className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeaderUi>
                 <DialogTitle className="sr-only">Nutrition label</DialogTitle>
                 <DialogDescription className="sr-only">
