@@ -96,12 +96,12 @@ function aggregateNutrients(foods: PostFoodItem[]) {
     );
     if (!f) return;
     totalWeight += amount;
-    const scale = amount / 100; // foods.json nutrients are per 100 g
+    const scale = amount / 100; // nutrients per 100 g in foods.json
 
-    // macros (already mg → convert first)
-    totals["Fat"] = (totals["Fat"] ?? 0) + f.fat / 10000 * scale; // g
-    totals["Proteins"] = (totals["Proteins"] ?? 0) + f.proteins / 10000 * scale; // g
-    totals["Carbs"] = (totals["Carbs"] ?? 0) + f.carbohydrates / 10000 * scale; // g
+    // macros
+    totals["Fat"] = (totals["Fat"] ?? 0) + (f.fat / 10000) * scale; // g
+    totals["Proteins"] = (totals["Proteins"] ?? 0) + (f.proteins / 10000) * scale; // g
+    totals["Carbs"] = (totals["Carbs"] ?? 0) + (f.carbohydrates / 10000) * scale; // g
     totals["Calories"] = (totals["Calories"] ?? 0) + f.calories * 100 * scale; // kcal
 
     // micronutrients
@@ -117,6 +117,13 @@ function aggregateNutrients(foods: PostFoodItem[]) {
   });
 
   return { totals, per100g, totalWeight };
+}
+
+function getUnit(nutrient: string): string {
+  if (nutrient === "Calories") return "kcal";
+  if (["Fat", "Proteins", "Carbs"].includes(nutrient)) return "g";
+  if (/vitamin/i.test(nutrient)) return "µg";
+  return "mg"; // minerals + amino acids default
 }
 
 /* -------------------------------------------------- */
@@ -222,12 +229,16 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     micronutrients.sort();
 
     const renderRow = (name: string) => (
-      <div key={name} className="grid grid-cols-3 border-b last:border-none">
-        <span className="col-span-2 py-1 text-sm font-medium text-gray-800">
-          {name}
+      <div
+        key={name}
+        className="grid grid-cols-4 border-b last:border-none py-1 text-sm text-gray-800"
+      >
+        <span className="col-span-2 font-medium">{name}</span>
+        <span className="text-right tabular-nums">
+          {nutrientPer100g[name]?.toFixed(1)} {getUnit(name)}
         </span>
-        <span className="py-1 text-right text-sm tabular-nums text-gray-800">
-          {nutrientPer100g[name]?.toFixed(1)} / {nutrientTotals[name]?.toFixed(1)}
+        <span className="text-right tabular-nums">
+          {nutrientTotals[name]?.toFixed(1)} {getUnit(name)}
         </span>
       </div>
     );
@@ -237,8 +248,11 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
         <h3 className="mb-2 text-center text-lg font-extrabold tracking-wide text-gray-900">
           Nutrition Facts
         </h3>
-        <div className="mb-2 text-xs text-gray-600">per 100 g / total</div>
-        <div className="border-t-4 border-gray-800" />
+        <div className="grid grid-cols-4 border-b-4 border-gray-800 pb-1 text-xs font-medium uppercase tracking-wide text-gray-600">
+          <span className="col-span-2" />
+          <span className="text-right">per 100 g</span>
+          <span className="text-right">total</span>
+        </div>
         {/* macro rows */}
         {macroOrder.map(renderRow)}
         <div className="my-1 border-t-4 border-gray-800" />
@@ -251,7 +265,7 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
   /* ------------ render --------------------------- */
   return (
     <TooltipProvider delayDuration={120}>
-      <Card>
+      <Card className="relative overflow-visible">
         {/* header row */}
         <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
           <div className="flex items-center gap-1 text-sm font-medium">
@@ -268,28 +282,6 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Nutrition label button */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-1 border border-gray-300 bg-white/70 backdrop-blur hover:bg-white"
-                >
-                  <ListOrdered className="h-4 w-4" /> Nutrition&nbsp;label
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeaderUi>
-                  <DialogTitle className="sr-only">Nutrition label</DialogTitle>
-                  <DialogDescription className="sr-only">
-                    Detailed nutritional information
-                  </DialogDescription>
-                </DialogHeaderUi>
-                <NutritionLabel />
-              </DialogContent>
-            </Dialog>
-
             <Pill colorClass="bg-emerald-600/15 text-emerald-700">
               <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg&nbsp;
               CO₂e
@@ -299,7 +291,29 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
         </CardHeader>
 
         {/* chart */}
-        <CardContent className="pb-4">
+        <CardContent className="relative pb-6 pt-2">
+          {/* floating nutrition button */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute -left-3 bottom-3 z-10 h-8 w-8 border border-gray-300 bg-white/70 backdrop-blur hover:bg-white"
+              >
+                <ListOrdered className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeaderUi>
+                <DialogTitle className="sr-only">Nutrition label</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Detailed nutritional information
+                </DialogDescription>
+              </DialogHeaderUi>
+              <NutritionLabel />
+            </DialogContent>
+          </Dialog>
+
           <ChartContainer
             config={{}}
             className="mx-auto aspect-square max-h-[240px]"
