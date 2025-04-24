@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PieChart, Pie, Label, Tooltip } from "recharts";
+import { PieChart, Pie, Label, Tooltip as ReTooltip } from "recharts";
 import {
   Card,
   CardContent,
@@ -102,6 +102,49 @@ const essentialAminoSet = new Set([
 const essentialFattySet = new Set(["α-Linolenic acid", "Linoleic acid"]);
 
 /* -------------------------------------------------- */
+/* conversion map (data fix)                          */
+/* -------------------------------------------------- */
+const multiplyMap: Record<string, number> = {
+  "Vitamin B1": 100,
+  "Vitamin B2": 10,
+  "Vitamin B7": 100,
+  "Vitamin B9": 100,
+  "Vitamin B12": 100,
+  "Vitamin E": 100,
+};
+
+const divideMap: Record<string, number> = {
+  /*   minerals   */
+  Calcium: 10,
+  Chloride: 10,
+  Chromium: 10,
+  Copper: 10,
+  Iron: 10,
+  Magnesium: 10,
+  Manganese: 10,
+  Molybdenum: 10,
+  Phosphorus: 10,
+  Potassium: 10,
+  Selenium: 10,
+  Sodium: 10,
+  Zinc: 10,
+  /*   others   */
+  Choline: 10,
+  Methionine: 10, // → mg
+  Tryptophan: 10, // → mg
+  "Vitamin A": 10, // → mg
+  "Vitamin B3": 10,
+  "Vitamin B5": 10,
+  "Vitamin B6": 10,
+  "Vitamin C": 10,
+  Isoleucine: 10000,
+  Leucine: 10000,
+  Phenylalanine: 10000,
+  Threonine: 10000,
+  Valine: 10000,
+};
+
+/* -------------------------------------------------- */
 /* helper components                                  */
 /* -------------------------------------------------- */
 const CustomTooltip = ({ active, payload }: any) =>
@@ -139,8 +182,14 @@ interface NutrientTotals {
   [key: string]: number;
 }
 
+function convertValue(name: string, value: number): number {
+  if (multiplyMap[name]) return value * multiplyMap[name];
+  if (divideMap[name]) return value / divideMap[name];
+  return value;
+}
+
 function aggregateNutrients(foods: PostFoodItem[]) {
-  let totals: NutrientTotals = {};
+  const totals: NutrientTotals = {};
   let totalWeight = 0;
 
   foods.forEach(({ food, amount }) => {
@@ -148,48 +197,65 @@ function aggregateNutrients(foods: PostFoodItem[]) {
       (d: any) => d.name.toLowerCase() === food.name.toLowerCase(),
     );
     if (!f) return;
+
     totalWeight += amount;
-    const scale = amount / 100; // nutrients per 100 g in foods.json
+    const scale = amount / 100; // foods.json is per 100 g
 
     // macros
     totals["Fat"] = (totals["Fat"] ?? 0) + (f.fat / 10000) * scale; // g
-    totals["Proteins"] = (totals["Proteins"] ?? 0) + (f.proteins / 10000) * scale; // g
-    totals["Carbs"] = (totals["Carbs"] ?? 0) + (f.carbohydrates / 10000) * scale; // g
-    totals["Calories"] = (totals["Calories"] ?? 0) + f.calories * 100 * scale; // kcal
+    totals["Proteins"] =
+      (totals["Proteins"] ?? 0) + (f.proteins / 10000) * scale; // g
+    totals["Carbs"] =
+      (totals["Carbs"] ?? 0) + (f.carbohydrates / 10000) * scale; // g
+    totals["Calories"] =
+      (totals["Calories"] ?? 0) + f.calories * 100 * scale; // kcal
 
-    // micronutrients
+    // micro-nutrients with conversions
     Object.entries(f.nutrients ?? {}).forEach(([k, v]) => {
-      let val = v;
-      // fix minerals scale (data 10×)
-      if (mineralSet.has(k) && !["Sodium"].includes(k)) {
-        val = v / 10;
-      }
-      totals[k] = (totals[k] ?? 0) + val * scale;
+      const fixed = convertValue(k, v);
+      totals[k] = (totals[k] ?? 0) + fixed * scale;
     });
   });
 
+  // derive per-100 g figures for the label
   const per100Factor = totalWeight ? 100 / totalWeight : 0;
   const per100g: NutrientTotals = {};
   Object.entries(totals).forEach(([k, v]) => {
     per100g[k] = v * per100Factor;
   });
 
-  return { totals, per100g, totalWeight };
+  return { totals, per100g };
 }
 
 function getUnit(nutrient: string): string {
   if (nutrient === "Calories") return "kcal";
   if (["Fat", "Proteins", "Carbs"].includes(nutrient)) return "g";
+
+  // special cases
+  if (nutrient === "Methionine" || nutrient === "Tryptophan") return "mg";
+
+  if (essentialAminoSet.has(nutrient)) return "g";
+  if (essentialFattySet.has(nutrient)) return "mg";
+
   if (vitaminSet.has(nutrient)) {
-    // B1 etc often mg/µg, choose µg default
-    if (["Vitamin C", "Choline"].includes(nutrient)) return "mg";
+    if (
+      [
+        "Vitamin C",
+        "Vitamin E",
+        "Vitamin B3",
+        "Vitamin B5",
+        "Vitamin B6",
+      ].includes(nutrient)
+    )
+      return "mg";
+    if (nutrient === "Vitamin A") return "mg";
     return "µg";
   }
-  if (essentialAminoSet.has(nutrient)) return nutrient === "Histidine" ? "mg" : "g";
-  if (essentialFattySet.has(nutrient)) return "mg";
-  // minerals default mg, some µg list
+
   if (["Chromium", "Iodine", "Molybdenum", "Selenium"].includes(nutrient))
     return "µg";
+
+  // default
   return "mg";
 }
 
@@ -197,7 +263,19 @@ function getUnit(nutrient: string): string {
 /* main component                                     */
 /* -------------------------------------------------- */
 export default function CaloriesChart({ foods }: CaloriesChartProps) {
-  /* ------------ compute totals only once --------- */
+  /* --- persistent dialog open state -------------- */
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    // restore
+    if (sessionStorage.getItem("mm_nutrition_open") === "1") setOpen(true);
+  }, []);
+  React.useEffect(() => {
+    // persist
+    sessionStorage.setItem("mm_nutrition_open", open ? "1" : "0");
+  }, [open]);
+
+  /* --- macro totals ------------------------------ */
   const {
     totalFat,
     totalProteins,
@@ -221,8 +299,8 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
         (d: any) => d.name.toLowerCase() === food.name.toLowerCase(),
       );
       if (!f) return;
-      const scale = amount / 100;
 
+      const scale = amount / 100;
       totalFat += (f.fat / 10000) * scale;
       totalProteins += (f.proteins / 10000) * scale;
       totalCarbs += (f.carbohydrates / 10000) * scale;
@@ -232,7 +310,8 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
       const n = f.name.toLowerCase();
       if (landMeatTerms.some((t) => n.includes(t))) hasLandMeat = true;
       if (fishTerms.some((t) => n.includes(t))) hasFish = true;
-      if (animalNonMeatTerms.some((t) => n.includes(t))) hasAnimalProduct = true;
+      if (animalNonMeatTerms.some((t) => n.includes(t)))
+        hasAnimalProduct = true;
     });
 
     let tag: "vegan" | "vegetarian" | "pescatarian" | null = null;
@@ -250,29 +329,23 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     };
   }, [foods]);
 
+  /* --- micro totals ------------------------------ */
   const { totals: nutrientTotals, per100g: nutrientPer100g } = React.useMemo(
     () => aggregateNutrients(foods),
     [foods],
   );
 
-  /* ---------- prepare nutrient groups ------------ */
-  const groupOrder: { title: string; set: Set<string> }[] = [
-    { title: "Vitamins", set: vitaminSet },
-    { title: "Minerals", set: mineralSet },
-    { title: "Essential Amino Acids", set: essentialAminoSet },
-    { title: "Essential Fatty Acids", set: essentialFattySet },
-  ];
-
-  /* ------------ chart data ----------------------- */
+  /* --- pie-chart data ---------------------------- */
   const chartData = [
     { nutrient: "Fat", value: totalFat, fill: "hsl(10 80% 55%)" },
     { nutrient: "Proteins", value: totalProteins, fill: "hsl(140 70% 45%)" },
     { nutrient: "Carbs", value: totalCarbs, fill: "hsl(220 70% 50%)" },
   ];
 
-  /* ------------ diet pill ------------------------ */
+  /* --- diet pill component ----------------------- */
   const DietPill = () => {
     if (!dietTag) return null;
+
     const props =
       dietTag === "vegan"
         ? { Icon: Sprout, cls: "bg-green-600/15 text-green-700", label: "Vegan" }
@@ -295,105 +368,42 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
     );
   };
 
-  /* ------------ nutrition label component -------- */
-  const NutritionLabel = () => {
-    const renderRow = (name: string) => (
-      <div
-        key={name}
-        className="grid grid-cols-4 border-b last:border-none py-0.5 text-sm text-gray-800"
-      >
-        <span className="col-span-2 truncate pr-2 font-medium">{name}</span>
-        <span className="text-right tabular-nums">
-          {nutrientPer100g[name]?.toFixed(1)} {getUnit(name)}
-        </span>
-        <span className="text-right tabular-nums">
-          {nutrientTotals[name]?.toFixed(1)} {getUnit(name)}
-        </span>
-      </div>
-    );
-
-    return (
-      <div className="max-h-[70vh] w-full overflow-y-auto rounded-md border-2 border-gray-800 bg-white p-4 shadow-lg">
-        <h3 className="mb-2 text-center text-lg font-extrabold tracking-wide text-gray-900">
-          Nutrition Facts
-        </h3>
-        <div className="grid grid-cols-4 border-b-4 border-gray-800 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-600">
-          <span className="col-span-2" />
-          <span className="text-right">per 100 g</span>
-          <span className="text-right">total</span>
-        </div>
-        {groupOrder.map(({ title, set }) => {
-          const names = Array.from(set).filter((n) => nutrientTotals[n] != null);
-          if (!names.length) return null;
-          return (
-            <div key={title} className="mt-3 first:mt-2">
-              <h4 className="mb-1 text-sm font-semibold text-gray-700">{title}</h4>
-              {names.sort().map(renderRow)}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  /* ------------ render --------------------------- */
+  /* --- render ------------------------------------ */
   return (
     <TooltipProvider delayDuration={120}>
       <Card className="relative overflow-visible">
-        {/* header row */}
+        {/* ---------- header ---------- */}
         <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
           <div className="flex items-center gap-1 text-sm font-medium">
-            Nutritional&nbsp;breakdown
+            Nutritional breakdown
             <UiTooltip>
               <TooltipTrigger asChild>
                 <Info className="h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs text-xs leading-snug">
-                Grams of fat, protein and carbs for this meal. Emissions come
-                from CarbonCloud and their Climatehub Public Database.
+                Grams of fat, protein and carbs for this meal.  
+                Micronutrients are aggregated from the selected foods.  
+                Emissions data via CarbonCloud.
               </TooltipContent>
             </UiTooltip>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Pill colorClass="bg-emerald-600/15 text-emerald-700">
-              <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg&nbsp;
-              CO₂e
+              <Leaf className="h-3 w-3" /> {totalEmissions.toFixed(2)} kg CO₂e
             </Pill>
             <DietPill />
           </div>
         </CardHeader>
 
-        {/* chart */}
-        <CardContent className="relative pb-6 pt-2">
-          {/* nutrition button inside border */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute left-2 bottom-2 z-10 h-8 w-8 border border-gray-300 bg-white/70 backdrop-blur hover:bg-white"
-              >
-                <ListOrdered className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeaderUi>
-                <DialogTitle className="sr-only">Nutrition label</DialogTitle>
-                <DialogDescription className="sr-only">
-                  Detailed nutritional information
-                </DialogDescription>
-              </DialogHeaderUi>
-              <NutritionLabel />
-            </DialogContent>
-          </Dialog>
-
+        {/* ---------- chart ---------- */}
+        <CardContent className="pb-4">
           <ChartContainer
             config={{}}
             className="mx-auto aspect-square max-h-[240px]"
           >
             <PieChart>
-              <Tooltip content={<CustomTooltip />} cursor={false} />
+              <ReTooltip content={<CustomTooltip />} cursor={false} />
               <Pie
                 data={chartData}
                 dataKey="value"
@@ -405,7 +415,6 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
                 <Label
                   content={({ viewBox }) => {
                     const { cx, cy } = viewBox as { cx: number; cy: number };
-                    if (cx == null || cy == null) return null;
                     return (
                       <text
                         x={cx}
@@ -434,6 +443,84 @@ export default function CaloriesChart({ foods }: CaloriesChartProps) {
             </PieChart>
           </ChartContainer>
         </CardContent>
+
+        {/* ---------- floating dialog trigger ---------- */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute bottom-2 left-2 h-8 w-8"
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+
+          {/* ---------- nutrition dialog ---------- */}
+          <DialogContent className="max-h-[70vh] overflow-y-auto sm:max-w-2xl">
+            <DialogHeaderUi>
+              <DialogTitle>Nutrition facts</DialogTitle>
+              <DialogDescription className="text-xs">
+                Per&nbsp;100 g and totals for this meal
+              </DialogDescription>
+            </DialogHeaderUi>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              {[
+                { title: "Vitamins", set: vitaminSet },
+                { title: "Minerals", set: mineralSet },
+                { title: "Essential Amino Acids", set: essentialAminoSet },
+                { title: "Essential Fatty Acids", set: essentialFattySet },
+              ].map(({ title, set }) => {
+                const entries = [...set]
+                  .filter((n) => nutrientTotals[n] != null)
+                  .sort();
+
+                if (!entries.length) return null;
+
+                return (
+                  <div key={title} className="space-y-2">
+                    <h3 className="font-medium">{title}</h3>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-muted-foreground">
+                          <th className="py-1 text-left">Nutrient</th>
+                          <th className="py-1 text-right">/ 100 g</th>
+                          <th className="py-1 text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entries.map((n) => {
+                          const unit = getUnit(n);
+                          const per100 = nutrientPer100g[n] ?? 0;
+                          const total = nutrientTotals[n] ?? 0;
+                          const fmt = (x: number) =>
+                            x >= 100
+                              ? Math.round(x)
+                              : x >= 10
+                              ? x.toFixed(1)
+                              : x.toFixed(2);
+
+                          return (
+                            <tr key={n}>
+                              <td className="pr-2 align-top">{n}</td>
+                              <td className="whitespace-nowrap text-right">
+                                {fmt(per100)} {unit}
+                              </td>
+                              <td className="whitespace-nowrap text-right">
+                                {fmt(total)} {unit}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
       </Card>
     </TooltipProvider>
   );
